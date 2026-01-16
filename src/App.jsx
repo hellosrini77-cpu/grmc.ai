@@ -726,7 +726,7 @@ export default function App() {
                 </svg>
                 <div>
                   <div className="text-green-400 text-sm font-medium">Your data is safe</div>
-                  <div className="text-slate-400 text-xs mt-1">Contracts are analyzed in real-time and never stored. Your data isn't retained or used for AI training.</div>
+                  <div className="text-slate-400 text-xs mt-1">Contracts are analyzed in real-time and never stored. Your data is not retained or used for AI training.</div>
                 </div>
               </div>
             </div>
