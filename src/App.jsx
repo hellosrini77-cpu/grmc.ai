@@ -730,8 +730,8 @@ export default function App() {
                 </div>
               </div>
             </div>
-          </div>
-          {/* Email Signup */}
+
+            {/* Email Signup */}
             <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
               <div className="text-sm font-medium text-slate-300 mb-2">Get updates</div>
               <form action="https://formspree.io/f/mvzzzokk" method="POST" className="flex gap-2">
@@ -750,6 +750,7 @@ export default function App() {
                 </button>
               </form>
             </div>
+          </div>
 
           {/* Right: Results (3 cols) */}
           <div className="lg:col-span-3 space-y-4">
