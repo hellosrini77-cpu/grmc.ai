@@ -12,7 +12,7 @@ const FRAMEWORKS = [
   { key: 'hipaa', label: 'HIPAA BAA', fullName: 'HIPAA Business Associate' },
 ];
 
-// Generate a simple hash for contract text to use as identifier
+// Generate a simple hash for contract text to use as an identifier
 const hashText = (text) => {
   let hash = 0;
   for (let i = 0; i < Math.min(text.length, 5000); i++) {
