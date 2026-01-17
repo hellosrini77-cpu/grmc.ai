@@ -1098,14 +1098,14 @@ export default function App() {
       
       {/* Header */}
       <header className="border-b border-slate-800">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex justify-center items-center">
-          <img src="/logo.png" alt="GRMC.ai" className="h-80 bg-white rounded-lg p-2" />
+        <div className="max-w-6xl mx-auto px-4 py-4">
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-8">
         {/* Hero */}
         <div className="text-center mb-10">
+          <img src="/logo.png" alt="GRMC.ai" className="block h-80 bg-white rounded-lg p-2 mx-auto mb-6" />
           <h1 className="text-3xl md:text-4xl font-bold mb-3">
             Contract <span className="text-blue-400">Compliance</span> Intelligence
           </h1>
