@@ -1100,7 +1100,7 @@ export default function App() {
       <header className="border-b border-slate-800">
         <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center">
-            <img src="/logo.png" alt="GRMC.ai" className="h-36" />
+            <img src="/logo.png" alt="GRMC.ai" className="h-44" />
           </div>
           <span className="text-slate-500 text-sm hidden sm:block">Governance, Risk Management & Compliance</span>
         </div>
