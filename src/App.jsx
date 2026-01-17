@@ -696,7 +696,6 @@ export default function App() {
       // Send to Apps Script
       await fetch('https://script.google.com/macros/s/AKfycbzuGZL_JbwuCpI_Ql7n12DteonZNOvGg_QeU6HbV5ta5H3XssZ-mN7_0bCHYJJzvcs/exec', {
         method: 'POST',
-        mode: 'no-cors',
         body: JSON.stringify({ 
           email, 
           source: 'grmc.ai',
@@ -1101,7 +1100,7 @@ export default function App() {
       <header className="border-b border-slate-800">
         <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="GRMC.ai" className="h-12" />
+            <img src="/logo.png" alt="GRMC.ai" className="h-14" />
             <span className="text-2xl font-bold">GRMC</span>
             <span className="text-blue-400 text-2xl">.ai</span>
           </div>
