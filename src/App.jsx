@@ -694,7 +694,7 @@ export default function App() {
         : `compliance-report-${new Date().toISOString().split('T')[0]}.pdf`;
       
       // Send to Apps Script
-      await fetch('https://script.google.com/macros/s/AKfycbzuGZL_JbwuCpI_Ql7n12DteonZNOvGg_QeU6HbV5ta5H3XssZ-mN7_0bCHYJJzvcs/exec', {
+      await fetch('https://script.google.com/macros/s/AKfycbxBwD27ii6uhyxC6HZwCHwYjK-aQjiR102hQc9zcnTydlpS-hCZkBAYBR2yFU9smjM/exec', {
         method: 'POST',
         body: JSON.stringify({ 
           email, 
@@ -1264,7 +1264,7 @@ export default function App() {
                   btn.disabled = true;
                   btn.textContent = 'Sending...';
                   try {
-                    await fetch('https://script.google.com/macros/s/AKfycbzuGZL_JbwuCpI_Ql7n12DteonZNOvGg_QeU6HbV5ta5H3XssZ-mN7_0bCHYJJzvcs/exec', {
+                    await fetch('https://script.google.com/macros/s/AKfycbxBwD27ii6uhyxC6HZwCHwYjK-aQjiR102hQc9zcnTydlpS-hCZkBAYBR2yFU9smjM/exec', {
                       method: 'POST',
                       body: JSON.stringify({ email, source: 'grmc.ai' })
                     });
