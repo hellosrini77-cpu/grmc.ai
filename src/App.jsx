@@ -1105,7 +1105,7 @@ export default function App() {
       <main className="max-w-6xl mx-auto px-4 py-8">
         {/* Hero */}
         <div className="text-center mb-10">
-          <img src="/logo.png" alt="GRMC.ai" className="block h-32 bg-white rounded-lg p-2 mx-auto mb-6" />
+          <img src="/logo.png" alt="GRMC.ai" className="block h-28 bg-white rounded-lg p-2 mx-auto mb-6" />
           <h1 className="text-3xl md:text-4xl font-bold mb-3">
             Contract <span className="text-blue-400">Compliance</span> Intelligence
           </h1>
