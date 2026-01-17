@@ -69,7 +69,6 @@ const getPreviousAnalysis = (identifier) => {
   const history = getHistory();
   if (history[identifier] && history[identifier].analyses.length > 0) {
     const analyses = history[identifier].analyses;
-    // Return the second-to-last analysis (the one before current)
     if (analyses.length >= 1) {
       return analyses[analyses.length - 1];
     }
@@ -82,107 +81,177 @@ const getContractHistory = (identifier) => {
   return history[identifier]?.analyses || [];
 };
 
+// Extract text from a single file
+const extractTextFromFile = async (file) => {
+  if (file.type === 'application/pdf') {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    
+    let fullText = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items.map(item => item.str).join(' ');
+      fullText += pageText + '\n';
+    }
+    return fullText;
+  } else {
+    return await file.text();
+  }
+};
+
 export default function App() {
+  // Multi-file state
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [allResults, setAllResults] = useState([]);
+  const [expandedResult, setExpandedResult] = useState(0);
+  
+  // Single contract state (for paste)
   const [contractText, setContractText] = useState('');
-  const [fileName, setFileName] = useState('');
+  
+  // Processing state
   const [analyzing, setAnalyzing] = useState(false);
+  const [currentFileIndex, setCurrentFileIndex] = useState(0);
+  const [totalFiles, setTotalFiles] = useState(0);
   const [extracting, setExtracting] = useState(false);
-  const [results, setResults] = useState(null);
+  
+  // UI state
   const [activeTab, setActiveTab] = useState('gdpr');
   const [error, setError] = useState('');
-  const [contractId, setContractId] = useState(null);
-  const [previousAnalysis, setPreviousAnalysis] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [historyContractId, setHistoryContractId] = useState(null);
   const [exportingPdf, setExportingPdf] = useState(false);
+  
   const fileInputRef = useRef(null);
 
-  // Extract text from PDF
+  // Handle multiple file uploads
   const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
 
-    setFileName(file.name);
-    setResults(null);
+    setAllResults([]);
     setError('');
     setExtracting(true);
-    setPreviousAnalysis(null);
+    setContractText('');
 
     try {
-      if (file.type === 'application/pdf') {
-        const arrayBuffer = await file.arrayBuffer();
-        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-        
-        let fullText = '';
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const textContent = await page.getTextContent();
-          const pageText = textContent.items.map(item => item.str).join(' ');
-          fullText += pageText + '\n';
+      const processedFiles = [];
+      
+      for (const file of files) {
+        try {
+          const text = await extractTextFromFile(file);
+          processedFiles.push({
+            name: file.name,
+            text: text,
+            id: `file_${file.name}_${hashText(text)}`
+          });
+        } catch (err) {
+          console.error(`Failed to extract text from ${file.name}:`, err);
+          processedFiles.push({
+            name: file.name,
+            text: '',
+            error: 'Failed to extract text',
+            id: `file_${file.name}_error`
+          });
         }
-        setContractText(fullText);
-      } else {
-        const text = await file.text();
-        setContractText(text);
       }
+      
+      setUploadedFiles(processedFiles);
     } catch (err) {
-      console.error('File parsing error:', err);
-      setError('Failed to extract text from file. Please try a different file or paste the text directly.');
+      console.error('File processing error:', err);
+      setError('Failed to process files. Please try again.');
     }
+    
     setExtracting(false);
     e.target.value = '';
   };
 
-  // Analyze contract for compliance
-  const analyzeContract = async () => {
-    if (!contractText.trim()) {
-      setError('Please upload a contract or paste the text first.');
+  // Analyze all contracts sequentially
+  const analyzeContracts = async () => {
+    // Determine what to analyze
+    const filesToAnalyze = uploadedFiles.length > 0 
+      ? uploadedFiles.filter(f => f.text && !f.error)
+      : contractText.trim() 
+        ? [{ name: 'Pasted Text', text: contractText, id: `text_${hashText(contractText)}` }]
+        : [];
+
+    if (filesToAnalyze.length === 0) {
+      setError('Please upload contracts or paste text first.');
       return;
     }
 
     setAnalyzing(true);
     setError('');
-    setResults(null);
+    setAllResults([]);
+    setTotalFiles(filesToAnalyze.length);
+    setCurrentFileIndex(0);
 
-    // Generate contract identifier
-    const id = fileName ? `file_${fileName}_${hashText(contractText)}` : `text_${hashText(contractText)}`;
-    setContractId(id);
-    
-    // Get previous analysis before this one
-    const prevAnalysis = getPreviousAnalysis(id);
-    setPreviousAnalysis(prevAnalysis);
+    const results = [];
 
-    try {
-      const response = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contractText: contractText.substring(0, 50000)
-        })
-      });
+    for (let i = 0; i < filesToAnalyze.length; i++) {
+      const file = filesToAnalyze[i];
+      setCurrentFileIndex(i + 1);
 
-      if (!response.ok) {
-        throw new Error('Analysis failed');
+      try {
+        // Get previous analysis for delta tracking
+        const prevAnalysis = getPreviousAnalysis(file.id);
+
+        const response = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contractText: file.text.substring(0, 50000)
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Analysis failed');
+        }
+
+        const data = await response.json();
+        
+        // Save to history
+        saveToHistory(file.id, file.name, data);
+
+        results.push({
+          fileName: file.name,
+          contractId: file.id,
+          results: data,
+          previousAnalysis: prevAnalysis,
+          error: null
+        });
+      } catch (err) {
+        console.error(`Analysis error for ${file.name}:`, err);
+        results.push({
+          fileName: file.name,
+          contractId: file.id,
+          results: null,
+          previousAnalysis: null,
+          error: 'Analysis failed'
+        });
       }
-
-      const data = await response.json();
-      setResults(data);
-      
-      // Save to history for delta tracking
-      saveToHistory(id, fileName || 'Pasted Text', data);
-      
-      // Auto-select first applicable framework
-      const firstApplicable = FRAMEWORKS.find(f => data[f.key]?.applicable !== false);
-      if (firstApplicable) setActiveTab(firstApplicable.key);
-    } catch (err) {
-      console.error('Analysis error:', err);
-      setError('Analysis failed. Please try again.');
     }
+
+    setAllResults(results);
+    setExpandedResult(0);
     setAnalyzing(false);
+    
+    // Auto-select first applicable framework from first successful result
+    const firstSuccess = results.find(r => r.results);
+    if (firstSuccess) {
+      const firstApplicable = FRAMEWORKS.find(f => firstSuccess.results[f.key]?.applicable !== false);
+      if (firstApplicable) setActiveTab(firstApplicable.key);
+    }
   };
 
-  // Generate PDF Report
-  const exportPdfReport = () => {
-    if (!results) return;
+  // Generate PDF Report for a specific result
+  const exportPdfReport = (resultIndex) => {
+    const resultData = allResults[resultIndex];
+    if (!resultData?.results) return;
+    
+    const results = resultData.results;
+    const fileName = resultData.fileName;
+    const previousAnalysis = resultData.previousAnalysis;
     
     setExportingPdf(true);
     
@@ -192,14 +261,6 @@ export default function App() {
       const margin = 20;
       let y = 20;
       
-      // Helper functions
-      const addText = (text, x, fontSize = 10, style = 'normal', color = [0, 0, 0]) => {
-        doc.setFontSize(fontSize);
-        doc.setFont('helvetica', style);
-        doc.setTextColor(...color);
-        doc.text(text, x, y);
-      };
-      
       const checkPageBreak = (needed = 20) => {
         if (y + needed > 280) {
           doc.addPage();
@@ -208,7 +269,7 @@ export default function App() {
       };
       
       // Header
-      doc.setFillColor(30, 41, 59); // slate-800
+      doc.setFillColor(30, 41, 59);
       doc.rect(0, 0, pageWidth, 40, 'F');
       
       doc.setTextColor(255, 255, 255);
@@ -230,14 +291,13 @@ export default function App() {
       y = 55;
       
       // Overall Score Section
-      doc.setFillColor(51, 65, 85); // slate-700
+      doc.setFillColor(51, 65, 85);
       doc.roundedRect(margin, y - 5, pageWidth - 2 * margin, 35, 3, 3, 'F');
       
-      doc.setTextColor(148, 163, 184); // slate-400
+      doc.setTextColor(148, 163, 184);
       doc.setFontSize(10);
       doc.text('OVERALL COMPLIANCE SCORE', margin + 10, y + 5);
       
-      // Score color
       const scoreColor = results.overallScore >= 80 ? [74, 222, 128] : 
                          results.overallScore >= 60 ? [250, 204, 21] :
                          results.overallScore >= 40 ? [251, 146, 60] : [248, 113, 113];
@@ -247,7 +307,6 @@ export default function App() {
       doc.setFont('helvetica', 'bold');
       doc.text(`${results.overallScore}%`, margin + 10, y + 25);
       
-      // Delta indicator if available
       if (previousAnalysis) {
         const delta = results.overallScore - previousAnalysis.overallScore;
         const deltaText = delta >= 0 ? `+${delta}%` : `${delta}%`;
@@ -257,7 +316,6 @@ export default function App() {
         doc.text(`${deltaText} vs previous`, margin + 55, y + 25);
       }
       
-      // Framework scores
       let scoreX = pageWidth - margin - 120;
       FRAMEWORKS.forEach(fw => {
         const fwData = results[fw.key];
@@ -282,7 +340,6 @@ export default function App() {
       
       y += 45;
       
-      // Summary
       if (results.summary) {
         checkPageBreak(30);
         doc.setTextColor(100, 116, 139);
@@ -293,14 +350,12 @@ export default function App() {
         y += summaryLines.length * 5 + 10;
       }
       
-      // Framework Details
       FRAMEWORKS.forEach(fw => {
         const fwData = results[fw.key];
         if (!fwData) return;
         
         checkPageBreak(50);
         
-        // Framework header
         doc.setFillColor(51, 65, 85);
         doc.roundedRect(margin, y - 2, pageWidth - 2 * margin, 12, 2, 2, 'F');
         
@@ -323,12 +378,10 @@ export default function App() {
           return;
         }
         
-        // Checklist items
         if (fwData.checklist) {
           fwData.checklist.forEach(item => {
             checkPageBreak(20);
             
-            // Status indicator
             if (item.present) {
               doc.setTextColor(74, 222, 128);
               doc.text('✓', margin + 5, y);
@@ -337,7 +390,6 @@ export default function App() {
               doc.text('✗', margin + 5, y);
             }
             
-            // Requirement text
             const reqColor = item.present ? [134, 239, 172] : [252, 165, 165];
             doc.setTextColor(...reqColor);
             doc.setFontSize(9);
@@ -346,7 +398,6 @@ export default function App() {
             doc.text(reqLines, margin + 15, y);
             y += reqLines.length * 4;
             
-            // Note
             if (item.note) {
               doc.setTextColor(100, 116, 139);
               doc.setFontSize(7);
@@ -359,7 +410,6 @@ export default function App() {
           });
         }
         
-        // Gaps & Remediation
         if (fwData.gaps && fwData.gaps.length > 0) {
           checkPageBreak(30);
           
@@ -372,7 +422,7 @@ export default function App() {
           fwData.gaps.forEach(gap => {
             checkPageBreak(25);
             
-            doc.setFillColor(15, 23, 42); // slate-900
+            doc.setFillColor(15, 23, 42);
             const gapHeight = 20;
             doc.roundedRect(margin + 5, y - 4, pageWidth - 2 * margin - 10, gapHeight, 2, 2, 'F');
             
@@ -395,7 +445,6 @@ export default function App() {
         y += 10;
       });
       
-      // Footer on last page
       const pageCount = doc.internal.getNumberOfPages();
       for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
@@ -409,7 +458,6 @@ export default function App() {
         );
       }
       
-      // Save the PDF
       const pdfFileName = fileName 
         ? `compliance-report-${fileName.replace(/\.[^/.]+$/, '')}.pdf`
         : `compliance-report-${new Date().toISOString().split('T')[0]}.pdf`;
@@ -426,12 +474,12 @@ export default function App() {
   // Reset everything
   const reset = () => {
     setContractText('');
-    setFileName('');
-    setResults(null);
+    setUploadedFiles([]);
+    setAllResults([]);
     setError('');
-    setContractId(null);
-    setPreviousAnalysis(null);
     setShowHistory(false);
+    setHistoryContractId(null);
+    setExpandedResult(0);
   };
 
   // Get score color
@@ -440,13 +488,6 @@ export default function App() {
     if (score >= 60) return 'text-yellow-400';
     if (score >= 40) return 'text-orange-400';
     return 'text-red-400';
-  };
-
-  const getScoreBgClass = (score) => {
-    if (score >= 80) return 'bg-green-500';
-    if (score >= 60) return 'bg-yellow-500';
-    if (score >= 40) return 'bg-orange-500';
-    return 'bg-red-500';
   };
 
   // Calculate delta
@@ -479,7 +520,6 @@ export default function App() {
         </div>
       )}
       
-      {/* Checklist */}
       <div className="space-y-2">
         {data.checklist?.map((item, i) => (
           <div key={i} className={`flex items-start gap-3 p-2 rounded-lg ${
@@ -502,7 +542,6 @@ export default function App() {
         ))}
       </div>
 
-      {/* Gaps & Remediation */}
       {data.gaps?.length > 0 && (
         <div className="mt-4">
           <h4 className="text-sm font-semibold text-red-400 uppercase tracking-wide mb-2">
@@ -523,9 +562,9 @@ export default function App() {
 
   // Render history modal
   const renderHistoryModal = () => {
-    if (!showHistory || !contractId) return null;
+    if (!showHistory || !historyContractId) return null;
     
-    const history = getContractHistory(contractId);
+    const history = getContractHistory(historyContractId);
     
     return (
       <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
@@ -575,6 +614,145 @@ export default function App() {
     );
   };
 
+  // Render single result card
+  const renderResultCard = (resultData, index) => {
+    const { fileName, contractId, results, previousAnalysis, error: resultError } = resultData;
+    const isExpanded = expandedResult === index;
+    
+    if (resultError) {
+      return (
+        <div key={index} className="bg-slate-800 rounded-xl border border-red-800/50 overflow-hidden">
+          <div className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-red-400">✗</span>
+              <span className="font-medium">{fileName}</span>
+            </div>
+            <span className="text-red-400 text-sm">Analysis failed</span>
+          </div>
+        </div>
+      );
+    }
+    
+    return (
+      <div key={index} className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+        {/* Collapsed header */}
+        <button
+          onClick={() => setExpandedResult(isExpanded ? -1 : index)}
+          className="w-full p-4 flex items-center justify-between hover:bg-slate-700/50 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <span className={`text-lg font-bold ${getScoreColor(results.overallScore)}`}>
+              {results.overallScore}%
+            </span>
+            <span className="font-medium truncate max-w-[200px]">{fileName}</span>
+            {previousAnalysis && renderDelta(results.overallScore, previousAnalysis.overallScore)}
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:flex gap-3">
+              {FRAMEWORKS.map(fw => (
+                <span key={fw.key} className={`text-xs ${
+                  results[fw.key]?.applicable === false 
+                    ? 'text-slate-600' 
+                    : getScoreColor(results[fw.key]?.score)
+                }`}>
+                  {fw.label}: {results[fw.key]?.applicable === false ? 'N/A' : `${results[fw.key]?.score}%`}
+                </span>
+              ))}
+            </div>
+            <svg 
+              className={`w-5 h-5 text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </button>
+        
+        {/* Expanded content */}
+        {isExpanded && (
+          <div className="border-t border-slate-700">
+            {/* Summary */}
+            {results.summary && (
+              <div className="p-4 border-b border-slate-700">
+                <p className="text-slate-400 text-sm">{results.summary}</p>
+              </div>
+            )}
+            
+            {/* Action buttons */}
+            <div className="p-4 border-b border-slate-700 flex gap-2">
+              <button
+                onClick={() => exportPdfReport(index)}
+                disabled={exportingPdf}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+              >
+                {exportingPdf ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Export Report
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  setHistoryContractId(contractId);
+                  setShowHistory(true);
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                View History
+              </button>
+            </div>
+            
+            {/* Framework tabs */}
+            <div className="flex border-b border-slate-700 overflow-x-auto">
+              {FRAMEWORKS.map(fw => (
+                <button
+                  key={fw.key}
+                  onClick={() => setActiveTab(fw.key)}
+                  className={`flex-1 px-3 py-3 text-sm font-medium transition-colors whitespace-nowrap ${
+                    activeTab === fw.key
+                      ? 'bg-slate-700 text-white border-b-2 border-blue-500'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                  }`}
+                >
+                  {fw.label}
+                  {results[fw.key] && (
+                    <span className={`ml-1 text-xs ${
+                      results[fw.key]?.applicable === false 
+                        ? 'text-slate-600' 
+                        : getScoreColor(results[fw.key]?.score)
+                    }`}>
+                      {results[fw.key]?.applicable === false ? 'N/A' : `${results[fw.key]?.score}%`}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+            
+            <div className="p-4 max-h-[400px] overflow-y-auto">
+              {results[activeTab] && renderChecklist(results[activeTab])}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-slate-900 text-white">
       {/* History Modal */}
@@ -598,7 +776,7 @@ export default function App() {
             Contract <span className="text-blue-400">Compliance</span> Intelligence
           </h1>
           <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-            Upload a contract. Get instant compliance analysis across GDPR, SOC 2, CCPA & HIPAA.
+            Upload contracts. Get instant compliance analysis across GDPR, SOC 2, CCPA & HIPAA.
           </p>
         </div>
 
@@ -606,13 +784,14 @@ export default function App() {
         <div className="grid lg:grid-cols-5 gap-6">
           {/* Left: Upload & Input (2 cols) */}
           <div className="lg:col-span-2 space-y-4">
-            {/* File Upload */}
+            {/* File Upload - Now accepts multiple */}
             <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
-              <label className="block text-sm font-medium text-slate-400 mb-3">Contract Document</label>
+              <label className="block text-sm font-medium text-slate-400 mb-3">Contract Documents</label>
               <input
                 ref={fileInputRef}
                 type="file"
                 accept=".pdf,.txt,.doc,.docx"
+                multiple
                 onChange={handleFileUpload}
                 className="hidden"
               />
@@ -628,18 +807,22 @@ export default function App() {
                     </svg>
                     Extracting text...
                   </div>
-                ) : fileName ? (
+                ) : uploadedFiles.length > 0 ? (
                   <div>
-                    <div className="text-green-400 mb-1">✓ {fileName}</div>
-                    <div className="text-slate-500 text-sm">Click to upload different file</div>
+                    <div className="text-green-400 mb-1">✓ {uploadedFiles.length} file{uploadedFiles.length > 1 ? 's' : ''} loaded</div>
+                    <div className="text-slate-400 text-sm mb-2">
+                      {uploadedFiles.map(f => f.name).join(', ')}
+                    </div>
+                    <div className="text-slate-500 text-sm">Click to upload different files</div>
                   </div>
                 ) : (
                   <div>
                     <svg className="w-10 h-10 mx-auto mb-2 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                     </svg>
-                    <div className="text-slate-300 font-medium">Upload PDF or text file</div>
-                    <div className="text-slate-500 text-sm mt-1">DPA, MSA, BAA, Vendor Agreement</div>
+                    <div className="text-slate-300 font-medium">Upload PDF or text files</div>
+                    <div className="text-slate-500 text-sm mt-1">DPA, MSA, BAA, Vendor Agreements</div>
+                    <div className="text-blue-400 text-xs mt-2">Supports multiple files</div>
                   </div>
                 )}
               </button>
@@ -652,7 +835,10 @@ export default function App() {
               </label>
               <textarea
                 value={contractText}
-                onChange={(e) => setContractText(e.target.value)}
+                onChange={(e) => {
+                  setContractText(e.target.value);
+                  if (e.target.value) setUploadedFiles([]);
+                }}
                 placeholder="Paste your contract text here..."
                 className="w-full h-32 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 resize-none"
               />
@@ -668,10 +854,10 @@ export default function App() {
 
             {/* Analyze Button */}
             <button
-              onClick={analyzeContract}
-              disabled={analyzing || !contractText.trim()}
+              onClick={analyzeContracts}
+              disabled={analyzing || (!contractText.trim() && uploadedFiles.length === 0)}
               className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
-                analyzing || !contractText.trim()
+                analyzing || (!contractText.trim() && uploadedFiles.length === 0)
                   ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
                   : 'bg-blue-600 hover:bg-blue-500 text-white'
               }`}
@@ -682,8 +868,10 @@ export default function App() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Analyzing 4 frameworks...
+                  Analyzing {currentFileIndex} of {totalFiles}...
                 </span>
+              ) : uploadedFiles.length > 1 ? (
+                `Analyze ${uploadedFiles.length} Contracts`
               ) : (
                 'Analyze Compliance'
               )}
@@ -734,7 +922,28 @@ export default function App() {
             {/* Email Signup */}
             <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
               <div className="text-sm font-medium text-slate-300 mb-2">Get updates</div>
-              <form action="https://formspree.io/f/mvzzzokk" method="POST" className="flex gap-2">
+              <form 
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  const email = e.target.email.value;
+                  const btn = e.target.querySelector('button');
+                  btn.disabled = true;
+                  btn.textContent = 'Sending...';
+                  try {
+                    await fetch('https://script.google.com/macros/s/AKfycbzuGZL_JbwuCpI_Ql7n12DteonZNOvGg_QeU6HbV5ta5H3XssZ-mN7_0bCHYJJzvcs/exec', {
+                      method: 'POST',
+                      body: JSON.stringify({ email, source: 'grmc.ai' })
+                    });
+                    e.target.reset();
+                    btn.textContent = '✓ Subscribed!';
+                    setTimeout(() => { btn.textContent = 'Subscribe'; btn.disabled = false; }, 2000);
+                  } catch (err) {
+                    btn.textContent = 'Try again';
+                    btn.disabled = false;
+                  }
+                }}
+                className="flex gap-2"
+              >
                 <input 
                   type="email" 
                   name="email" 
@@ -744,7 +953,7 @@ export default function App() {
                 />
                 <button 
                   type="submit"
-                  className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
                 >
                   Subscribe
                 </button>
@@ -754,130 +963,52 @@ export default function App() {
 
           {/* Right: Results (3 cols) */}
           <div className="lg:col-span-3 space-y-4">
-            {!results ? (
+            {allResults.length === 0 ? (
               <div className="bg-slate-800/50 rounded-xl p-8 border border-slate-700/50 text-center h-full flex flex-col items-center justify-center min-h-[400px]">
                 <svg className="w-16 h-16 text-slate-700 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <div className="text-slate-500 text-lg">Compliance results will appear here</div>
-                <div className="text-slate-600 text-sm mt-2">Upload a contract and click Analyze</div>
+                <div className="text-slate-600 text-sm mt-2">Upload contracts and click Analyze</div>
               </div>
             ) : (
               <>
-                {/* Overall Score + Framework Scores */}
-                <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <div className="text-slate-400 text-xs font-medium uppercase tracking-wide">Overall Score</div>
-                      <div className="flex items-center">
-                        <span className={`text-4xl font-bold ${getScoreColor(results.overallScore)}`}>
-                          {results.overallScore}%
+                {/* Results summary */}
+                {allResults.length > 1 && (
+                  <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+                    <div className="text-sm text-slate-400 mb-2">
+                      Analyzed {allResults.length} contracts
+                    </div>
+                    <div className="flex gap-4 flex-wrap">
+                      {allResults.filter(r => r.results).length > 0 && (
+                        <span className="text-green-400 text-sm">
+                          ✓ {allResults.filter(r => r.results).length} successful
                         </span>
-                        {previousAnalysis && renderDelta(results.overallScore, previousAnalysis.overallScore)}
-                      </div>
-                    </div>
-                    <div className="flex gap-3">
-                      {FRAMEWORKS.map(fw => (
-                        <div key={fw.key} className="text-center">
-                          <div className="text-slate-500 text-xs mb-1">{fw.label}</div>
-                          <div className={`text-lg font-bold ${
-                            results[fw.key]?.applicable === false 
-                              ? 'text-slate-600' 
-                              : getScoreColor(results[fw.key]?.score)
-                          }`}>
-                            {results[fw.key]?.applicable === false ? 'N/A' : `${results[fw.key]?.score}%`}
-                          </div>
-                          {previousAnalysis && results[fw.key]?.applicable !== false && (
-                            <div className="text-xs">
-                              {renderDelta(results[fw.key]?.score, previousAnalysis.scores[fw.key])}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  {/* Summary */}
-                  {results.summary && (
-                    <div className="pt-3 border-t border-slate-700">
-                      <p className="text-slate-400 text-sm">{results.summary}</p>
-                    </div>
-                  )}
-                  
-                  {/* Action Buttons */}
-                  <div className="flex gap-2 mt-4 pt-3 border-t border-slate-700">
-                    <button
-                      onClick={exportPdfReport}
-                      disabled={exportingPdf}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-                    >
-                      {exportingPdf ? (
-                        <>
-                          <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Generating...
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                          Export Report
-                        </>
                       )}
-                    </button>
-                    <button
-                      onClick={() => setShowHistory(true)}
-                      className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium transition-colors"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      View History
-                    </button>
+                      {allResults.filter(r => r.error).length > 0 && (
+                        <span className="text-red-400 text-sm">
+                          ✗ {allResults.filter(r => r.error).length} failed
+                        </span>
+                      )}
+                      <span className="text-slate-400 text-sm">
+                        Avg score: {Math.round(
+                          allResults.filter(r => r.results).reduce((sum, r) => sum + r.results.overallScore, 0) /
+                          allResults.filter(r => r.results).length
+                        )}%
+                      </span>
+                    </div>
                   </div>
-                </div>
-
-                {/* Framework Tabs */}
-                <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
-                  <div className="flex border-b border-slate-700 overflow-x-auto">
-                    {FRAMEWORKS.map(fw => (
-                      <button
-                        key={fw.key}
-                        onClick={() => setActiveTab(fw.key)}
-                        className={`flex-1 px-3 py-3 text-sm font-medium transition-colors whitespace-nowrap ${
-                          activeTab === fw.key
-                            ? 'bg-slate-700 text-white border-b-2 border-blue-500'
-                            : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
-                        }`}
-                      >
-                        {fw.label}
-                        {results[fw.key] && (
-                          <span className={`ml-1 text-xs ${
-                            results[fw.key]?.applicable === false 
-                              ? 'text-slate-600' 
-                              : getScoreColor(results[fw.key]?.score)
-                          }`}>
-                            {results[fw.key]?.applicable === false ? 'N/A' : `${results[fw.key]?.score}%`}
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                  
-                  <div className="p-4 max-h-[400px] overflow-y-auto">
-                    {results[activeTab] && renderChecklist(results[activeTab])}
-                  </div>
-                </div>
+                )}
+                
+                {/* Individual results */}
+                {allResults.map((result, index) => renderResultCard(result, index))}
 
                 {/* Reset */}
                 <button
                   onClick={reset}
                   className="w-full py-3 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 font-medium transition-colors"
                 >
-                  Analyze Another Contract
+                  Analyze More Contracts
                 </button>
               </>
             )}
