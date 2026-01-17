@@ -121,6 +121,8 @@ export default function App() {
   const [showHistory, setShowHistory] = useState(false);
   const [historyContractId, setHistoryContractId] = useState(null);
   const [exportingPdf, setExportingPdf] = useState(false);
+  const [emailReportModal, setEmailReportModal] = useState({ open: false, resultIndex: null });
+  const [emailSending, setEmailSending] = useState(false);
   
   const fileInputRef = useRef(null);
 
@@ -471,6 +473,251 @@ export default function App() {
     setExportingPdf(false);
   };
 
+  // Email PDF Report
+  const emailPdfReport = async (resultIndex, email, feedback) => {
+    const resultData = allResults[resultIndex];
+    if (!resultData?.results) return;
+    
+    const results = resultData.results;
+    const fileName = resultData.fileName;
+    const previousAnalysis = resultData.previousAnalysis;
+    
+    setEmailSending(true);
+    
+    try {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 20;
+      let y = 20;
+      
+      const checkPageBreak = (needed = 20) => {
+        if (y + needed > 280) {
+          doc.addPage();
+          y = 20;
+        }
+      };
+      
+      // Header
+      doc.setFillColor(30, 41, 59);
+      doc.rect(0, 0, pageWidth, 40, 'F');
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(24);
+      doc.setFont('helvetica', 'bold');
+      doc.text('GRMC.ai', margin, 18);
+      
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Contract Compliance Report', margin, 28);
+      
+      doc.setFontSize(9);
+      doc.text(`Generated: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}`, margin, 35);
+      
+      if (fileName) {
+        doc.text(`Document: ${fileName}`, pageWidth - margin - doc.getTextWidth(`Document: ${fileName}`), 35);
+      }
+      
+      y = 55;
+      
+      // Overall Score Section
+      doc.setFillColor(51, 65, 85);
+      doc.roundedRect(margin, y - 5, pageWidth - 2 * margin, 35, 3, 3, 'F');
+      
+      doc.setTextColor(148, 163, 184);
+      doc.setFontSize(10);
+      doc.text('OVERALL COMPLIANCE SCORE', margin + 10, y + 5);
+      
+      const scoreColor = results.overallScore >= 80 ? [74, 222, 128] : 
+                         results.overallScore >= 60 ? [250, 204, 21] :
+                         results.overallScore >= 40 ? [251, 146, 60] : [248, 113, 113];
+      
+      doc.setTextColor(...scoreColor);
+      doc.setFontSize(28);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${results.overallScore}%`, margin + 10, y + 25);
+      
+      if (previousAnalysis) {
+        const delta = results.overallScore - previousAnalysis.overallScore;
+        const deltaText = delta >= 0 ? `+${delta}%` : `${delta}%`;
+        const deltaColor = delta >= 0 ? [74, 222, 128] : [248, 113, 113];
+        doc.setTextColor(...deltaColor);
+        doc.setFontSize(12);
+        doc.text(`${deltaText} vs previous`, margin + 55, y + 25);
+      }
+      
+      let scoreX = pageWidth - margin - 120;
+      FRAMEWORKS.forEach(fw => {
+        const fwData = results[fw.key];
+        const fwScore = fwData?.applicable === false ? 'N/A' : `${fwData?.score || 0}%`;
+        const fwColor = fwData?.applicable === false ? [100, 116, 139] :
+                        fwData?.score >= 80 ? [74, 222, 128] :
+                        fwData?.score >= 60 ? [250, 204, 21] :
+                        fwData?.score >= 40 ? [251, 146, 60] : [248, 113, 113];
+        
+        doc.setTextColor(148, 163, 184);
+        doc.setFontSize(7);
+        doc.setFont('helvetica', 'normal');
+        doc.text(fw.label, scoreX, y + 5);
+        
+        doc.setTextColor(...fwColor);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text(fwScore, scoreX, y + 15);
+        
+        scoreX += 30;
+      });
+      
+      y += 45;
+      
+      if (results.summary) {
+        checkPageBreak(30);
+        doc.setTextColor(100, 116, 139);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'italic');
+        const summaryLines = doc.splitTextToSize(results.summary, pageWidth - 2 * margin);
+        doc.text(summaryLines, margin, y);
+        y += summaryLines.length * 5 + 10;
+      }
+      
+      FRAMEWORKS.forEach(fw => {
+        const fwData = results[fw.key];
+        if (!fwData) return;
+        
+        checkPageBreak(50);
+        
+        doc.setFillColor(51, 65, 85);
+        doc.roundedRect(margin, y - 2, pageWidth - 2 * margin, 12, 2, 2, 'F');
+        
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        doc.text(fw.fullName, margin + 5, y + 6);
+        
+        const fwScore = fwData.applicable === false ? 'N/A' : `${fwData.score}%`;
+        doc.text(fwScore, pageWidth - margin - 20, y + 6);
+        
+        y += 18;
+        
+        if (fwData.applicable === false) {
+          doc.setTextColor(100, 116, 139);
+          doc.setFontSize(9);
+          doc.setFont('helvetica', 'italic');
+          doc.text('This framework may not be applicable to this contract type', margin + 5, y);
+          y += 15;
+          return;
+        }
+        
+        if (fwData.checklist) {
+          fwData.checklist.forEach(item => {
+            checkPageBreak(20);
+            
+            if (item.present) {
+              doc.setTextColor(74, 222, 128);
+              doc.text('✓', margin + 5, y);
+            } else {
+              doc.setTextColor(248, 113, 113);
+              doc.text('✗', margin + 5, y);
+            }
+            
+            const reqColor = item.present ? [134, 239, 172] : [252, 165, 165];
+            doc.setTextColor(...reqColor);
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            const reqLines = doc.splitTextToSize(item.requirement, pageWidth - 2 * margin - 20);
+            doc.text(reqLines, margin + 15, y);
+            y += reqLines.length * 4;
+            
+            if (item.note) {
+              doc.setTextColor(100, 116, 139);
+              doc.setFontSize(7);
+              const noteLines = doc.splitTextToSize(item.note, pageWidth - 2 * margin - 20);
+              doc.text(noteLines, margin + 15, y + 2);
+              y += noteLines.length * 3 + 4;
+            }
+            
+            y += 4;
+          });
+        }
+        
+        if (fwData.gaps && fwData.gaps.length > 0) {
+          checkPageBreak(30);
+          
+          doc.setTextColor(248, 113, 113);
+          doc.setFontSize(9);
+          doc.setFont('helvetica', 'bold');
+          doc.text('GAPS & REMEDIATION', margin + 5, y);
+          y += 8;
+          
+          fwData.gaps.forEach(gap => {
+            checkPageBreak(25);
+            
+            doc.setFillColor(15, 23, 42);
+            const gapHeight = 20;
+            doc.roundedRect(margin + 5, y - 4, pageWidth - 2 * margin - 10, gapHeight, 2, 2, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'bold');
+            const issueLines = doc.splitTextToSize(`Issue: ${gap.issue}`, pageWidth - 2 * margin - 20);
+            doc.text(issueLines, margin + 10, y + 2);
+            
+            doc.setTextColor(148, 163, 184);
+            doc.setFontSize(7);
+            doc.setFont('helvetica', 'normal');
+            const remLines = doc.splitTextToSize(`Remediation: ${gap.remediation}`, pageWidth - 2 * margin - 20);
+            doc.text(remLines, margin + 10, y + 10);
+            
+            y += gapHeight + 5;
+          });
+        }
+        
+        y += 10;
+      });
+      
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setTextColor(100, 116, 139);
+        doc.setFontSize(8);
+        doc.text(
+          `Page ${i} of ${pageCount} | GRMC.ai - AI-Powered Contract Compliance`,
+          pageWidth / 2,
+          290,
+          { align: 'center' }
+        );
+      }
+      
+      // Get PDF as base64
+      const pdfBase64 = doc.output('datauristring').split(',')[1];
+      const pdfFileName = fileName 
+        ? `compliance-report-${fileName.replace(/\.[^/.]+$/, '')}.pdf`
+        : `compliance-report-${new Date().toISOString().split('T')[0]}.pdf`;
+      
+      // Send to Apps Script
+      await fetch('https://script.google.com/macros/s/AKfycbzuGZL_JbwuCpI_Ql7n12DteonZNOvGg_QeU6HbV5ta5H3XssZ-mN7_0bCHYJJzvcs/exec', {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify({ 
+          email, 
+          source: 'grmc.ai',
+          feedback: feedback || '',
+          reportPdf: pdfBase64,
+          reportFileName: pdfFileName,
+          contractName: fileName || 'Pasted Text',
+          overallScore: results.overallScore
+        })
+      });
+      
+      setEmailReportModal({ open: false, resultIndex: null });
+      alert('Report sent! Check your email.');
+    } catch (err) {
+      console.error('Email report error:', err);
+      alert('Failed to send report. Please try again.');
+    }
+    
+    setEmailSending(false);
+  };
+
   // Reset everything
   const reset = () => {
     setContractText('');
@@ -614,6 +861,86 @@ export default function App() {
     );
   };
 
+  // Render email report modal
+  const renderEmailReportModal = () => {
+    if (!emailReportModal.open) return null;
+    
+    return (
+      <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+        <div className="bg-slate-800 rounded-xl max-w-md w-full overflow-hidden">
+          <div className="p-4 border-b border-slate-700 flex justify-between items-center">
+            <h3 className="text-lg font-semibold">Email Report</h3>
+            <button 
+              onClick={() => setEmailReportModal({ open: false, resultIndex: null })}
+              className="text-slate-400 hover:text-white"
+            >
+              ✕
+            </button>
+          </div>
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.target);
+              emailPdfReport(
+                emailReportModal.resultIndex,
+                formData.get('email'),
+                formData.get('feedback')
+              );
+            }}
+            className="p-4 space-y-4"
+          >
+            <div>
+              <label className="block text-sm font-medium text-slate-400 mb-2">
+                Email address *
+              </label>
+              <input
+                type="email"
+                name="email"
+                required
+                placeholder="your@email.com"
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-400 mb-2">
+                Feedback (optional)
+              </label>
+              <textarea
+                name="feedback"
+                rows={3}
+                placeholder="Any issues or suggestions? We'd love to hear from you..."
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 resize-none"
+              />
+              <p className="text-xs text-slate-500 mt-1">Help us improve GRMC.ai</p>
+            </div>
+            <button
+              type="submit"
+              disabled={emailSending}
+              className="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {emailSending ? (
+                <>
+                  <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  Send Report
+                </>
+              )}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
   // Render single result card
   const renderResultCard = (resultData, index) => {
     const { fileName, contractId, results, previousAnalysis, error: resultError } = resultData;
@@ -681,7 +1008,7 @@ export default function App() {
             )}
             
             {/* Action buttons */}
-            <div className="p-4 border-b border-slate-700 flex gap-2">
+            <div className="p-4 border-b border-slate-700 flex gap-2 flex-wrap">
               <button
                 onClick={() => exportPdfReport(index)}
                 disabled={exportingPdf}
@@ -703,6 +1030,15 @@ export default function App() {
                     Export Report
                   </>
                 )}
+              </button>
+              <button
+                onClick={() => setEmailReportModal({ open: true, resultIndex: index })}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg text-sm font-medium transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                Email Report
               </button>
               <button
                 onClick={() => {
@@ -758,11 +1094,14 @@ export default function App() {
       {/* History Modal */}
       {renderHistoryModal()}
       
+      {/* Email Report Modal */}
+      {renderEmailReportModal()}
+      
       {/* Header */}
       <header className="border-b border-slate-800">
         <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="GRMC.ai" className="h-10 w-10" />
+          <div className="flex items-center gap-3">
+            <img src="/logo.png" alt="GRMC.ai" className="h-12" />
             <span className="text-2xl font-bold">GRMC</span>
             <span className="text-blue-400 text-2xl">.ai</span>
           </div>
