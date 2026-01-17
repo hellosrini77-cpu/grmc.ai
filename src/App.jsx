@@ -3,7 +3,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import jsPDF from 'jspdf';
 
 // Configure PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/liblos/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 const FRAMEWORKS = [
   { key: 'gdpr', label: 'GDPR Art. 28', fullName: 'GDPR Article 28' },
@@ -1100,7 +1100,7 @@ export default function App() {
       <header className="border-b border-slate-800">
         <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="GRMC.ai" className="h-18" />
+            <img src="/logo.png" alt="GRMC.ai" className="h-16" />
             <span className="text-2xl font-bold">GRMC</span>
             <span className="text-blue-400 text-2xl">.ai</span>
           </div>
