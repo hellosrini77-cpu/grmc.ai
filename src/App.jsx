@@ -1105,7 +1105,7 @@ export default function App() {
       <main className="max-w-6xl mx-auto px-4 py-8">
         {/* Hero */}
         <div className="text-center mb-10">
-          <img src="/logo.png" alt="GRMC.ai" className="block h-28 bg-white rounded-lg p-2 mx-auto mb-6" />
+          <img src="/logo.png" alt="GRMC.ai" className="block h-48 bg-white rounded-lg p-2 mx-auto mb-6" />
           <h1 className="text-3xl md:text-4xl font-bold mb-3">
             Contract <span className="text-blue-400">Compliance</span> Intelligence
           </h1>
@@ -1351,9 +1351,10 @@ export default function App() {
 
         {/* Footer */}
         <footer className="mt-16 pt-8 border-t border-slate-800 text-center text-slate-500 text-sm">
-          <p>GRMC.ai — Governance, Risk Management & Compliance</p>
+          <p>GRMC.ai™ — Governance, Risk Management & Compliance</p>
           <p className="mt-1">AI-powered contract compliance analysis</p>
           <p className="mt-3 text-xs text-slate-600">🔒 Zero data retention • Your contracts are never stored</p>
+          <p className="mt-2 text-xs text-slate-600">© 2025 GRMC.ai. All rights reserved.</p>
         </footer>
       </main>
     </div>
