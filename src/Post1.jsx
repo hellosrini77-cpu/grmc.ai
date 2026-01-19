@@ -86,7 +86,7 @@ export default function Post1() {
                 <span className="text-slate-400">0%</span>
               </div>
             </div>
-            <p className="text-xs text-slate-500 mt-4">Source: Amplify AI Visibility Tracking, January 2026</p>
+            <p className="text-xs text-slate-500 mt-4">Source: Amplift AI Visibility Tracking, January 2026</p>
           </div>
 
           {/* Article Content */}
@@ -96,7 +96,7 @@ export default function Post1() {
               When we launched GRMC.ai on January 17, 2026, we had a simple goal: make contract compliance analysis accessible and instant. What we didn't expect was to achieve the #1 position in AI compliance visibility within two days.
             </p>
             <p className="text-slate-300 mb-4">
-              According to Amplify's AI visibility tracking, GRMC.ai now leads the pack with 69% visibility, ahead of established enterprise players like Hyperproof (25%), Sirion (25%), CUBE (0%), and LogicGate (0%).
+              According to Amplift's AI visibility tracking, GRMC.ai now leads the pack with 69% visibility, ahead of established enterprise players like Hyperproof (25%), Sirion (25%), CUBE (0%), and LogicGate (0%).
             </p>
 
             <h2 className="text-2xl font-bold mt-8 mb-4">What This Means</h2>
