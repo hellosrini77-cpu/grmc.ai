@@ -1118,22 +1118,54 @@ function Home() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-8">
-        {/* Hero */}
-        <div className="text-center mb-10">
-          <img src="/logo.png" alt="GRMC.ai" className="block h-40 bg-white rounded-lg p-2 mx-auto mb-6" />
-          <h1 className="text-3xl md:text-4xl font-bold mb-3">
-            Contract <span className="text-blue-400">Compliance</span> Intelligence
+        {/* Hero - UPDATED */}
+        <div className="text-center mb-12">
+          <img src="/logo.png" alt="GRMC.ai" className="block h-32 bg-white rounded-lg p-2 mx-auto mb-6" />
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight">
+            Stop Manually Reviewing Vendor Contracts for <span className="text-blue-400">Compliance</span>
           </h1>
-          <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-            Upload contracts. Get instant compliance analysis across GDPR, SOC 2, CCPA & HIPAA.
+          <p className="text-slate-300 text-xl max-w-3xl mx-auto mb-4">
+            AI-powered gap analysis for GDPR Article 28, SOC 2, CCPA, and HIPAA. Upload a DPA, get instant compliance assessment in minutes.
+          </p>
+          <p className="text-slate-500 text-sm max-w-2xl mx-auto">
+            Your CLM tells you what's in the contract. GRMC.ai tells you if it's compliant.
           </p>
         </div>
 
-        {/* Main Content */}
-        <div className="grid lg:grid-cols-5 gap-6">
+        {/* Problem Statement Section - NEW */}
+        <section className="mb-12 bg-slate-800/50 rounded-xl p-8 border border-slate-700/50">
+          <h2 className="text-2xl font-bold mb-4 text-center">The Compliance Gap in Modern Contract Management</h2>
+          <p className="text-slate-300 mb-4 text-center max-w-3xl mx-auto">
+            Legal and compliance teams face a critical challenge:
+          </p>
+          <div className="grid md:grid-cols-2 gap-4 max-w-4xl mx-auto">
+            <div className="bg-slate-900/50 rounded-lg p-4">
+              <div className="text-red-400 mb-2">⚠️</div>
+              <p className="text-slate-300 text-sm">Vendor contracts require compliance verification (GDPR, SOC 2, HIPAA)</p>
+            </div>
+            <div className="bg-slate-900/50 rounded-lg p-4">
+              <div className="text-red-400 mb-2">⚠️</div>
+              <p className="text-slate-300 text-sm">CLM systems extract data but don't judge compliance</p>
+            </div>
+            <div className="bg-slate-900/50 rounded-lg p-4">
+              <div className="text-red-400 mb-2">⚠️</div>
+              <p className="text-slate-300 text-sm">Manual review takes 2-4 hours per contract</p>
+            </div>
+            <div className="bg-slate-900/50 rounded-lg p-4">
+              <div className="text-red-400 mb-2">⚠️</div>
+              <p className="text-slate-300 text-sm">Compliance mistakes are costly (fines, audit failures, deal delays)</p>
+            </div>
+          </div>
+          <p className="text-center text-slate-400 mt-6 font-medium">
+            Result: Bottlenecks, risk exposure, and expensive manual work that doesn't scale.
+          </p>
+        </section>
+
+        {/* Main Upload/Analysis Area - KEEP AS IS */}
+        <div className="grid lg:grid-cols-5 gap-6 mb-16">
           {/* Left: Upload & Input (2 cols) */}
           <div className="lg:col-span-2 space-y-4">
-            {/* File Upload - Now accepts multiple */}
+            {/* File Upload */}
             <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
               <label className="block text-sm font-medium text-slate-400 mb-3">Contract Documents</label>
               <input
@@ -1363,6 +1395,136 @@ function Home() {
             )}
           </div>
         </div>
+
+        {/* Who Uses GRMC.ai Section - NEW */}
+        <section className="mb-16">
+          <h2 className="text-3xl font-bold text-center mb-8">Who Uses GRMC.ai</h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+              <h3 className="text-xl font-semibold mb-3 text-blue-400">Legal Operations Teams</h3>
+              <p className="text-slate-300 text-sm mb-4 italic">
+                "We use Ironclad for contract management, but still manually review every vendor DPA for GDPR compliance. GRMC.ai cut our review time from 3 hours to 15 minutes per contract."
+              </p>
+              <ul className="text-slate-400 text-sm space-y-2">
+                <li>• Mid-market to enterprise companies</li>
+                <li>• Already using CLMs but need compliance layer</li>
+                <li>• Overwhelmed with vendor contract reviews</li>
+              </ul>
+            </div>
+
+            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+              <h3 className="text-xl font-semibold mb-3 text-purple-400">Compliance Officers</h3>
+              <p className="text-slate-300 text-sm mb-4 italic">
+                "During SOC 2 audits, we need to verify all vendor contracts meet security requirements. GRMC.ai gives us confidence we haven't missed anything."
+              </p>
+              <ul className="text-slate-400 text-sm space-y-2">
+                <li>• Preparing for compliance audits</li>
+                <li>• Managing third-party risk programs</li>
+                <li>• Need documentation for auditors</li>
+              </ul>
+            </div>
+
+            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+              <h3 className="text-xl font-semibold mb-3 text-green-400">SaaS Companies</h3>
+              <p className="text-slate-300 text-sm mb-4 italic">
+                "We're not big enough for enterprise GRC platforms, but we need to ensure our vendor contracts are GDPR compliant. GRMC.ai is the right-sized solution."
+              </p>
+              <ul className="text-slate-400 text-sm space-y-2">
+                <li>• 100-1000 employees</li>
+                <li>• Subject to GDPR, CCPA, or HIPAA</li>
+                <li>• Need affordable compliance verification</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* Supported Compliance Frameworks Section - NEW */}
+        <section className="mb-16">
+          <h2 className="text-3xl font-bold text-center mb-4">Supported Compliance Frameworks</h2>
+          <p className="text-slate-400 text-center mb-8 max-w-2xl mx-auto">
+            GRMC.ai provides automated gap analysis against major compliance frameworks
+          </p>
+          
+          <div className="space-y-6">
+            {/* GDPR Article 28 */}
+            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+              <h3 className="text-xl font-semibold mb-3 text-blue-400">GDPR Article 28 (Data Processing Agreements)</h3>
+              <p className="text-slate-300 text-sm mb-4">
+                Analyzes DPAs for compliance with EU data protection requirements:
+              </p>
+              <div className="grid md:grid-cols-2 gap-3 text-slate-400 text-sm">
+                <div>• Data processing obligations and limitations</div>
+                <div>• Security measures and incident response</div>
+                <div>• Sub-processor authorization requirements</div>
+                <div>• Data subject rights assistance</div>
+                <div>• Audit rights and documentation</div>
+                <div>• Data breach notification timelines</div>
+              </div>
+            </div>
+
+            {/* SOC 2 */}
+            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+              <h3 className="text-xl font-semibold mb-3 text-purple-400">SOC 2 Type I & Type II</h3>
+              <p className="text-slate-300 text-sm mb-4">
+                Verifies vendor contracts include necessary SOC 2 commitments:
+              </p>
+              <div className="grid md:grid-cols-2 gap-3 text-slate-400 text-sm">
+                <div>• Security controls and commitments</div>
+                <div>• Availability and uptime SLAs</div>
+                <div>• Processing integrity requirements</div>
+                <div>• Confidentiality obligations</div>
+                <div>• Incident response procedures</div>
+                <div>• Right to audit provisions</div>
+              </div>
+            </div>
+
+            {/* CCPA/CPRA */}
+            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+              <h3 className="text-xl font-semibold mb-3 text-orange-400">CCPA/CPRA (California Privacy)</h3>
+              <p className="text-slate-300 text-sm mb-4">
+                Checks for California privacy law compliance:
+              </p>
+              <div className="grid md:grid-cols-2 gap-3 text-slate-400 text-sm">
+                <div>• Service provider vs. contractor designation</div>
+                <div>• Data sale prohibitions</div>
+                <div>• Consumer rights support obligations</div>
+                <div>• Data retention and deletion requirements</div>
+                <div>• Privacy notice requirements</div>
+                <div>• Third-party disclosure restrictions</div>
+              </div>
+            </div>
+
+            {/* HIPAA */}
+            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+              <h3 className="text-xl font-semibold mb-3 text-pink-400">HIPAA (Business Associate Agreements)</h3>
+              <p className="text-slate-300 text-sm mb-4">
+                Validates BAAs contain required HIPAA provisions:
+              </p>
+              <div className="grid md:grid-cols-2 gap-3 text-slate-400 text-sm">
+                <div>• Permitted uses and disclosures</div>
+                <div>• Safeguard requirements</div>
+                <div>• Breach notification obligations</div>
+                <div>• Subcontractor requirements</div>
+                <div>• Return or destruction of PHI</div>
+                <div>• Availability of books and records</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Why Trust Us Section - NEW */}
+        <section className="mb-16 bg-slate-800/50 rounded-xl p-8 border border-slate-700/50">
+          <h2 className="text-3xl font-bold text-center mb-4">Built by Legal Ops Experts</h2>
+          <p className="text-slate-300 text-center max-w-3xl mx-auto mb-6">
+            GRMC.ai was created by <strong>20-year legal tech veterans</strong> who spent their careers at Twitter, Workday, Amazon, and IBM implementing enterprise CLM systems and managing global legal operations teams.
+          </p>
+          <p className="text-slate-400 text-center max-w-3xl mx-auto mb-6">
+            We built GRMC.ai because we lived the pain: CLM vendors claim "AI capabilities" but deliver data extraction, not compliance intelligence. Legal ops teams still do manual gap analysis.
+          </p>
+          <p className="text-blue-400 text-center font-medium">
+            We built the tool we wished existed.
+          </p>
+        </section>
 
         {/* Footer */}
         <footer className="mt-16 pt-8 border-t border-slate-800 text-center text-slate-500 text-sm">
