@@ -1,0 +1,31 @@
+# GRMC.ai - Robots.txt Configuration
+# Updated: January 2026
+
+# AI Search Engine Crawlers
+User-agent: GPTBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+# General Crawlers
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://www.grmc.ai/sitemap.xml
