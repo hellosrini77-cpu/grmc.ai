@@ -1398,41 +1398,44 @@ function Home() {
 
         {/* Who Uses GRMC.ai Section - NEW */}
         <section className="mb-16">
-          <h2 className="text-3xl font-bold text-center mb-8">Who Uses GRMC.ai</h2>
+          <h2 className="text-3xl font-bold text-center mb-8">Who GRMC.ai is Built For</h2>
           <div className="grid md:grid-cols-3 gap-6">
             <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
               <h3 className="text-xl font-semibold mb-3 text-blue-400">Legal Operations Teams</h3>
-              <p className="text-slate-300 text-sm mb-4 italic">
-                "We use our CLM for contract management, but still manually review every vendor DPA for GDPR compliance. GRMC.ai cut our review time from 3 hours to 15 minutes per contract."
+              <p className="text-slate-300 text-sm mb-4">
+                Mid-market to enterprise companies using CLMs for contract storage but lacking a compliance intelligence layer. Manual DPA review takes 2-4 hours per contract - GRMC.ai is designed to reduce that to minutes through automated gap analysis.
               </p>
               <ul className="text-slate-400 text-sm space-y-2">
-                <li>• Mid-market to enterprise companies</li>
-                <li>• Already using CLMs but need compliance layer</li>
+                <li>• Companies with 100-5000 employees</li>
+                <li>• Already using CLMs (Ironclad, Docusign, Conga)</li>
                 <li>• Overwhelmed with vendor contract reviews</li>
+                <li>• Need to scale compliance without hiring</li>
               </ul>
             </div>
 
             <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
               <h3 className="text-xl font-semibold mb-3 text-purple-400">Compliance Officers</h3>
-              <p className="text-slate-300 text-sm mb-4 italic">
-                "During SOC 2 audits, we need to verify all vendor contracts meet security requirements. GRMC.ai gives us confidence we haven't missed anything."
+              <p className="text-slate-300 text-sm mb-4">
+                Compliance and risk teams preparing for audits need to verify all vendor contracts meet framework requirements. GRMC.ai provides automated verification and audit-ready documentation for SOC 2, GDPR, CCPA, and HIPAA compliance.
               </p>
               <ul className="text-slate-400 text-sm space-y-2">
                 <li>• Preparing for compliance audits</li>
                 <li>• Managing third-party risk programs</li>
-                <li>• Need documentation for auditors</li>
+                <li>• Need audit documentation and evidence</li>
+                <li>• Tracking compliance across vendors</li>
               </ul>
             </div>
 
             <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
               <h3 className="text-xl font-semibold mb-3 text-green-400">SaaS Companies</h3>
-              <p className="text-slate-300 text-sm mb-4 italic">
-                "We're not big enough for enterprise GRC platforms, but we need to ensure our vendor contracts are GDPR compliant. GRMC.ai is the right-sized solution."
+              <p className="text-slate-300 text-sm mb-4">
+                Fast-growing SaaS companies subject to GDPR, CCPA, or HIPAA requirements need affordable compliance verification without enterprise GRC platform costs. GRMC.ai provides compliance intelligence at startup-friendly pricing.
               </p>
               <ul className="text-slate-400 text-sm space-y-2">
-                <li>• 100-1000 employees</li>
+                <li>• 50-500 employees</li>
                 <li>• Subject to GDPR, CCPA, or HIPAA</li>
-                <li>• Need affordable compliance verification</li>
+                <li>• Can't afford enterprise GRC platforms</li>
+                <li>• Need to move fast without compliance delays</li>
               </ul>
             </div>
           </div>
