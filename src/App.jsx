@@ -1406,8 +1406,8 @@ function Home() {
                 Mid-market to enterprise companies using CLMs for contract storage but lacking a compliance intelligence layer. Manual DPA review takes 2-4 hours per contract - GRMC.ai is designed to reduce that to minutes through automated gap analysis.
               </p>
               <ul className="text-slate-400 text-sm space-y-2">
-                <li>• Companies with 100-5000 employees</li>
-                <li>• Already using CLMs (Ironclad, Docusign, Conga)</li>
+                <li>• Companies with 100-2000 employees</li>
+                <li>• Already using a CLM </li>
                 <li>• Overwhelmed with vendor contract reviews</li>
                 <li>• Need to scale compliance without hiring</li>
               </ul>
@@ -1519,7 +1519,7 @@ function Home() {
         <section className="mb-16 bg-slate-800/50 rounded-xl p-8 border border-slate-700/50">
           <h2 className="text-3xl font-bold text-center mb-4">Built by Legal Ops Experts</h2>
           <p className="text-slate-300 text-center max-w-3xl mx-auto mb-6">
-            GRMC.ai was created by <strong>20-year legal tech veterans</strong> who spent their careers at Twitter, Workday, Amazon, and IBM implementing enterprise CLM systems and managing global legal operations teams.
+            GRMC.ai was created by <strong>20-year legal tech career veterans</strong> who spent their careers implementing enterprise CLM systems and managing global legal operations teams.
           </p>
           <p className="text-slate-400 text-center max-w-3xl mx-auto mb-6">
             We built GRMC.ai because we lived the pain: CLM vendors claim "AI capabilities" but deliver data extraction, not compliance intelligence. Legal ops teams still do manual gap analysis.
