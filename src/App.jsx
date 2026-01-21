@@ -1128,7 +1128,7 @@ function Home() {
             AI-powered gap analysis for GDPR Article 28, SOC 2, CCPA, and HIPAA. Upload a DPA, get instant compliance assessment in minutes.
           </p>
           <p className="text-slate-500 text-sm max-w-2xl mx-auto">
-            Your CLM tells you what's in the contract. GRMC.ai tells you <span className="text-blue-400 font-semibold">if it's compliant</span>.
+            Your CLM tells you what's in the contract. <span className="text-blue-400 font-semibold">GRMC.ai tells you if it's compliant</span>.
           </p>
         </div>
 
