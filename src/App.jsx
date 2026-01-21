@@ -1128,7 +1128,7 @@ function Home() {
             AI-powered gap analysis for GDPR Article 28, SOC 2, CCPA, and HIPAA. Upload a DPA, get instant compliance assessment in minutes.
           </p>
           <p className="text-slate-500 text-sm max-w-2xl mx-auto">
-            Your CLM tells you what's in the contract. GRMC.ai tells you if it's compliant.
+            Your CLM tells you what's in the contract. GRMC.ai tells you <span className="text-blue-400 font-semibold">if it's compliant</span>.
           </p>
         </div>
 
@@ -1403,7 +1403,7 @@ function Home() {
             <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
               <h3 className="text-xl font-semibold mb-3 text-blue-400">Legal Operations Teams</h3>
               <p className="text-slate-300 text-sm mb-4 italic">
-                "We use Ironclad for contract management, but still manually review every vendor DPA for GDPR compliance. GRMC.ai cut our review time from 3 hours to 15 minutes per contract."
+                "We use our CLM for contract management, but still manually review every vendor DPA for GDPR compliance. GRMC.ai cut our review time from 3 hours to 15 minutes per contract."
               </p>
               <ul className="text-slate-400 text-sm space-y-2">
                 <li>• Mid-market to enterprise companies</li>
