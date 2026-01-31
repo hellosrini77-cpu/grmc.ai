@@ -3,6 +3,38 @@ import { Link } from 'react-router-dom';
 
 const posts = [
   {
+    slug: 'ai-contract-analysis-beyond-hype',
+    title: 'AI-Powered Contract Analysis: Beyond the Hype and Into Real Legal Operations Value',
+    excerpt: 'Every legal tech vendor now claims "AI-powered contract analysis." But the gap between AI hype and AI utility is massive. Here\'s what real AI capabilities look like—if you know what to look for.',
+    date: 'January 31, 2026',
+    category: 'Technology',
+    readTime: '14 min read'
+  },
+  {
+    slug: 'soc2-audit-contract-compliance',
+    title: 'SOC 2 Audit Prep: The Contract Compliance Checklist Your Auditors Are Looking For',
+    excerpt: 'Your SOC 2 audit is in 90 days. You\'ve documented security controls and gathered evidence. But vendor contract compliance trips up even experienced teams—here\'s the checklist auditors consistently look for.',
+    date: 'January 31, 2026',
+    category: 'Audit Preparation',
+    readTime: '18 min read'
+  },
+  {
+    slug: 'gdpr-contract-compliance-gaps',
+    title: 'GDPR Contract Compliance: The 7 Most Common Gaps (And How to Fix Them)',
+    excerpt: 'Six years after GDPR took effect, most organizations have addressed the obvious requirements. But contract-level compliance gaps remain—and they\'re exactly what surfaces during regulatory audits.',
+    date: 'January 31, 2026',
+    category: 'Compliance',
+    readTime: '15 min read'
+  },
+  {
+    slug: 'why-clms-fall-short-compliance',
+    title: 'Why Traditional CLMs Fall Short on Compliance Automation (And What Legal Ops Teams Need Instead)',
+    excerpt: 'After implementing 50+ CLM systems, I\'ve seen this pattern repeatedly: companies invest millions expecting automated compliance monitoring, only to discover they still need manual reviews and last-minute audit scrambles.',
+    date: 'January 31, 2026',
+    category: 'Legal Operations',
+    readTime: '12 min read'
+  },
+  {
     slug: 'grmc-ai-ranks-number-1-compliance-visibility',
     title: 'GRMC.ai Ranks #1 in AI Compliance Visibility',
     excerpt: 'In just 48 hours after launch, GRMC.ai achieved the top spot in AI compliance visibility, outranking established players like Hyperproof and Sirion.',
