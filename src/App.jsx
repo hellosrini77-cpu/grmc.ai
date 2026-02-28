@@ -17,6 +17,8 @@ const FRAMEWORKS = [
   { key: 'soc2', label: 'SOC 2', fullName: 'SOC 2' },
   { key: 'ccpa', label: 'CCPA/CPRA', fullName: 'CCPA/CPRA' },
   { key: 'hipaa', label: 'HIPAA BAA', fullName: 'HIPAA Business Associate' },
+  { key: 'iso27001', label: 'ISO 27001', fullName: 'ISO 27001' },
+  { key: 'sox', label: 'SOX', fullName: 'SOX (Sarbanes-Oxley)' },
 ];
 
 // Generate a simple hash for contract text to use as an identifier
@@ -60,7 +62,9 @@ const saveToHistory = (identifier, fileName, results) => {
       gdpr: results.gdpr?.score,
       soc2: results.soc2?.score,
       ccpa: results.ccpa?.score,
-      hipaa: results.hipaa?.score
+      hipaa: results.hipaa?.score,
+      iso27001: results.iso27001?.score,
+      sox: results.sox?.score,
     }
   });
   
@@ -325,7 +329,7 @@ function Home() {
         doc.text(`${deltaText} vs previous`, margin + 55, y + 25);
       }
       
-      let scoreX = pageWidth - margin - 120;
+      let scoreX = pageWidth - margin - 150;
       FRAMEWORKS.forEach(fw => {
         const fwData = results[fw.key];
         const fwScore = fwData?.applicable === false ? 'N/A' : `${fwData?.score || 0}%`;
@@ -344,7 +348,7 @@ function Home() {
         doc.setFont('helvetica', 'bold');
         doc.text(fwScore, scoreX, y + 15);
         
-        scoreX += 30;
+        scoreX += 25;
       });
       
       y += 45;
@@ -429,25 +433,47 @@ function Home() {
           y += 8;
           
           fwData.gaps.forEach(gap => {
-            checkPageBreak(25);
+            checkPageBreak(40);
             
             doc.setFillColor(15, 23, 42);
-            const gapHeight = 20;
-            doc.roundedRect(margin + 5, y - 4, pageWidth - 2 * margin - 10, gapHeight, 2, 2, 'F');
+            doc.roundedRect(margin + 5, y - 4, pageWidth - 2 * margin - 10, 8, 2, 2, 'F');
             
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(8);
             doc.setFont('helvetica', 'bold');
             const issueLines = doc.splitTextToSize(`Issue: ${gap.issue}`, pageWidth - 2 * margin - 20);
             doc.text(issueLines, margin + 10, y + 2);
-            
-            doc.setTextColor(148, 163, 184);
-            doc.setFontSize(7);
-            doc.setFont('helvetica', 'normal');
-            const remLines = doc.splitTextToSize(`Remediation: ${gap.remediation}`, pageWidth - 2 * margin - 20);
-            doc.text(remLines, margin + 10, y + 10);
-            
-            y += gapHeight + 5;
+            y += issueLines.length * 4 + 4;
+
+            if (gap.currentClause) {
+              checkPageBreak(20);
+              doc.setTextColor(248, 113, 113);
+              doc.setFontSize(7);
+              doc.setFont('helvetica', 'bold');
+              doc.text('CURRENT CLAUSE:', margin + 10, y);
+              y += 4;
+              doc.setTextColor(252, 165, 165);
+              doc.setFont('helvetica', 'italic');
+              const currentLines = doc.splitTextToSize(gap.currentClause, pageWidth - 2 * margin - 20);
+              doc.text(currentLines, margin + 10, y);
+              y += currentLines.length * 4 + 4;
+            }
+
+            if (gap.replacementClause) {
+              checkPageBreak(20);
+              doc.setTextColor(74, 222, 128);
+              doc.setFontSize(7);
+              doc.setFont('helvetica', 'bold');
+              doc.text('REPLACEMENT CLAUSE:', margin + 10, y);
+              y += 4;
+              doc.setTextColor(134, 239, 172);
+              doc.setFont('helvetica', 'normal');
+              const replLines = doc.splitTextToSize(gap.replacementClause, pageWidth - 2 * margin - 20);
+              doc.text(replLines, margin + 10, y);
+              y += replLines.length * 4 + 6;
+            }
+
+            y += 4;
           });
         }
         
@@ -552,7 +578,7 @@ function Home() {
         doc.text(`${deltaText} vs previous`, margin + 55, y + 25);
       }
       
-      let scoreX = pageWidth - margin - 120;
+      let scoreX = pageWidth - margin - 150;
       FRAMEWORKS.forEach(fw => {
         const fwData = results[fw.key];
         const fwScore = fwData?.applicable === false ? 'N/A' : `${fwData?.score || 0}%`;
@@ -571,7 +597,7 @@ function Home() {
         doc.setFont('helvetica', 'bold');
         doc.text(fwScore, scoreX, y + 15);
         
-        scoreX += 30;
+        scoreX += 25;
       });
       
       y += 45;
@@ -656,25 +682,47 @@ function Home() {
           y += 8;
           
           fwData.gaps.forEach(gap => {
-            checkPageBreak(25);
+            checkPageBreak(40);
             
             doc.setFillColor(15, 23, 42);
-            const gapHeight = 20;
-            doc.roundedRect(margin + 5, y - 4, pageWidth - 2 * margin - 10, gapHeight, 2, 2, 'F');
+            doc.roundedRect(margin + 5, y - 4, pageWidth - 2 * margin - 10, 8, 2, 2, 'F');
             
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(8);
             doc.setFont('helvetica', 'bold');
             const issueLines = doc.splitTextToSize(`Issue: ${gap.issue}`, pageWidth - 2 * margin - 20);
             doc.text(issueLines, margin + 10, y + 2);
-            
-            doc.setTextColor(148, 163, 184);
-            doc.setFontSize(7);
-            doc.setFont('helvetica', 'normal');
-            const remLines = doc.splitTextToSize(`Remediation: ${gap.remediation}`, pageWidth - 2 * margin - 20);
-            doc.text(remLines, margin + 10, y + 10);
-            
-            y += gapHeight + 5;
+            y += issueLines.length * 4 + 4;
+
+            if (gap.currentClause) {
+              checkPageBreak(20);
+              doc.setTextColor(248, 113, 113);
+              doc.setFontSize(7);
+              doc.setFont('helvetica', 'bold');
+              doc.text('CURRENT CLAUSE:', margin + 10, y);
+              y += 4;
+              doc.setTextColor(252, 165, 165);
+              doc.setFont('helvetica', 'italic');
+              const currentLines = doc.splitTextToSize(gap.currentClause, pageWidth - 2 * margin - 20);
+              doc.text(currentLines, margin + 10, y);
+              y += currentLines.length * 4 + 4;
+            }
+
+            if (gap.replacementClause) {
+              checkPageBreak(20);
+              doc.setTextColor(74, 222, 128);
+              doc.setFontSize(7);
+              doc.setFont('helvetica', 'bold');
+              doc.text('REPLACEMENT CLAUSE:', margin + 10, y);
+              y += 4;
+              doc.setTextColor(134, 239, 172);
+              doc.setFont('helvetica', 'normal');
+              const replLines = doc.splitTextToSize(gap.replacementClause, pageWidth - 2 * margin - 20);
+              doc.text(replLines, margin + 10, y);
+              y += replLines.length * 4 + 6;
+            }
+
+            y += 4;
           });
         }
         
@@ -798,13 +846,30 @@ function Home() {
       {data.gaps?.length > 0 && (
         <div className="mt-4">
           <h4 className="text-sm font-semibold text-red-400 uppercase tracking-wide mb-2">
-            Gaps & Remediation
+            Gaps & Clause Replacements
           </h4>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {data.gaps.map((gap, i) => (
-              <div key={i} className="bg-slate-900 rounded-lg p-3">
-                <div className="text-white font-medium text-sm mb-1">{gap.issue}</div>
-                <div className="text-slate-400 text-xs">{gap.remediation}</div>
+              <div key={i} className="bg-slate-900 rounded-lg p-3 space-y-2">
+                <div className="text-white font-medium text-sm">{gap.issue}</div>
+                {gap.currentClause && (
+                  <div>
+                    <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Current Clause</div>
+                    <div className="bg-red-950/40 border border-red-900/40 rounded p-2 text-xs text-red-300 italic">{gap.currentClause}</div>
+                  </div>
+                )}
+                {gap.replacementClause && (
+                  <div>
+                    <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Replacement Clause</div>
+                    <div className="bg-green-950/40 border border-green-900/40 rounded p-2 text-xs text-green-300 font-mono leading-relaxed">{gap.replacementClause}</div>
+                    <button
+                      onClick={() => navigator.clipboard.writeText(gap.replacementClause)}
+                      className="mt-1 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                    >
+                      📋 Copy to clipboard
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -846,7 +911,7 @@ function Home() {
                         {analysis.overallScore}%
                       </span>
                     </div>
-                    <div className="flex gap-4 text-xs">
+                    <div className="flex flex-wrap gap-3 text-xs">
                       {FRAMEWORKS.map(fw => (
                         <div key={fw.key}>
                           <span className="text-slate-500">{fw.label}: </span>
@@ -981,7 +1046,7 @@ function Home() {
             {previousAnalysis && renderDelta(results.overallScore, previousAnalysis.overallScore)}
           </div>
           <div className="flex items-center gap-4">
-            <div className="hidden sm:flex gap-3">
+            <div className="hidden sm:flex gap-2 flex-wrap justify-end">
               {FRAMEWORKS.map(fw => (
                 <span key={fw.key} className={`text-xs ${
                   results[fw.key]?.applicable === false 
@@ -1121,21 +1186,21 @@ function Home() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-8">
-        {/* Hero - UPDATED */}
+        {/* Hero */}
         <div className="text-center mb-12">
           <img src="/logo.png" alt="GRMC.ai" className="block h-32 bg-white rounded-lg p-2 mx-auto mb-6" />
           <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight">
             Stop Manually Reviewing Vendor Contracts for <span className="text-blue-400">Compliance</span>
           </h1>
           <p className="text-slate-300 text-xl max-w-3xl mx-auto mb-4">
-            AI-powered gap analysis for GDPR Article 28, SOC 2, CCPA, and HIPAA. Upload a DPA, get instant compliance assessment in minutes.
+            AI-powered gap analysis for GDPR Article 28, SOC 2, CCPA, HIPAA, ISO 27001, and SOX. Upload a contract, get instant compliance assessment in minutes.
           </p>
           <p className="text-slate-500 text-sm max-w-2xl mx-auto">
             Your CLM tells you what's in the contract. <span className="text-blue-400 font-semibold">GRMC.ai tells you if it's compliant</span>.
           </p>
         </div>
 
-        {/* Problem Statement Section - NEW */}
+        {/* Problem Statement Section */}
         <section className="mb-12 bg-slate-800/50 rounded-xl p-8 border border-slate-700/50">
           <h2 className="text-2xl font-bold mb-4 text-center">The Compliance Gap in Modern Contract Management</h2>
           <p className="text-slate-300 mb-4 text-center max-w-3xl mx-auto">
@@ -1144,7 +1209,7 @@ function Home() {
           <div className="grid md:grid-cols-2 gap-4 max-w-4xl mx-auto">
             <div className="bg-slate-900/50 rounded-lg p-4">
               <div className="text-red-400 mb-2">⚠️</div>
-              <p className="text-slate-300 text-sm">Vendor contracts require compliance verification (GDPR, SOC 2, HIPAA)</p>
+              <p className="text-slate-300 text-sm">Vendor contracts require compliance verification (GDPR, SOC 2, HIPAA, ISO 27001, SOX)</p>
             </div>
             <div className="bg-slate-900/50 rounded-lg p-4">
               <div className="text-red-400 mb-2">⚠️</div>
@@ -1164,7 +1229,7 @@ function Home() {
           </p>
         </section>
 
-        {/* Main Upload/Analysis Area - KEEP AS IS */}
+        {/* Main Upload/Analysis Area */}
         <div className="grid lg:grid-cols-5 gap-6 mb-16">
           {/* Left: Upload & Input (2 cols) */}
           <div className="lg:col-span-2 space-y-4">
@@ -1287,6 +1352,14 @@ function Home() {
                   <span className="w-2 h-2 rounded-full bg-pink-500"></span>
                   <span className="text-slate-400">HIPAA BAA</span>
                 </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-teal-500"></span>
+                  <span className="text-slate-400">ISO 27001</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
+                  <span className="text-slate-400">SOX</span>
+                </div>
               </div>
             </div>
 
@@ -1399,7 +1472,7 @@ function Home() {
           </div>
         </div>
 
-        {/* Who Uses GRMC.ai Section - NEW */}
+        {/* Who Uses GRMC.ai Section */}
         <section className="mb-16">
           <h2 className="text-3xl font-bold text-center mb-8">Who GRMC.ai is Built For</h2>
           <div className="grid md:grid-cols-3 gap-6">
@@ -1419,7 +1492,7 @@ function Home() {
             <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
               <h3 className="text-xl font-semibold mb-3 text-purple-400">Compliance Officers</h3>
               <p className="text-slate-300 text-sm mb-4">
-                Compliance and risk teams preparing for audits need to verify all vendor contracts meet framework requirements. GRMC.ai provides automated verification and audit-ready documentation for SOC 2, GDPR, CCPA, and HIPAA compliance.
+                Compliance and risk teams preparing for audits need to verify all vendor contracts meet framework requirements. GRMC.ai provides automated verification and audit-ready documentation for SOC 2, GDPR, CCPA, HIPAA, ISO 27001, and SOX compliance.
               </p>
               <ul className="text-slate-400 text-sm space-y-2">
                 <li>• Preparing for compliance audits</li>
@@ -1432,11 +1505,11 @@ function Home() {
             <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
               <h3 className="text-xl font-semibold mb-3 text-green-400">SaaS Companies</h3>
               <p className="text-slate-300 text-sm mb-4">
-                Fast-growing SaaS companies subject to GDPR, CCPA, or HIPAA requirements need affordable compliance verification without enterprise GRC platform costs. GRMC.ai provides compliance intelligence at startup-friendly pricing.
+                Fast-growing SaaS companies subject to GDPR, CCPA, HIPAA, or ISO 27001 requirements need affordable compliance verification without enterprise GRC platform costs. GRMC.ai provides compliance intelligence at startup-friendly pricing.
               </p>
               <ul className="text-slate-400 text-sm space-y-2">
                 <li>• 50-500 employees</li>
-                <li>• Subject to GDPR, CCPA, or HIPAA</li>
+                <li>• Subject to GDPR, CCPA, HIPAA, or ISO 27001</li>
                 <li>• Can't afford enterprise GRC platforms</li>
                 <li>• Need to move fast without compliance delays</li>
               </ul>
@@ -1444,11 +1517,11 @@ function Home() {
           </div>
         </section>
 
-        {/* Supported Compliance Frameworks Section - NEW */}
+        {/* Supported Compliance Frameworks Section */}
         <section className="mb-16">
           <h2 className="text-3xl font-bold text-center mb-4">Supported Compliance Frameworks</h2>
           <p className="text-slate-400 text-center mb-8 max-w-2xl mx-auto">
-            GRMC.ai provides automated gap analysis against major compliance frameworks
+            GRMC.ai provides automated gap analysis against six major compliance frameworks
           </p>
           
           <div className="space-y-6">
@@ -1515,10 +1588,42 @@ function Home() {
                 <div>• Availability of books and records</div>
               </div>
             </div>
+
+            {/* ISO 27001 */}
+            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+              <h3 className="text-xl font-semibold mb-3 text-teal-400">ISO 27001 (Information Security Management)</h3>
+              <p className="text-slate-300 text-sm mb-4">
+                Verifies contracts reflect ISO 27001 Annex A control obligations:
+              </p>
+              <div className="grid md:grid-cols-2 gap-3 text-slate-400 text-sm">
+                <div>• Information security policy obligations</div>
+                <div>• Access control and least privilege</div>
+                <div>• Cryptography and encryption standards</div>
+                <div>• Supplier security flow-down requirements</div>
+                <div>• Incident management and response</div>
+                <div>• ISO 27001 certification requirement</div>
+              </div>
+            </div>
+
+            {/* SOX */}
+            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+              <h3 className="text-xl font-semibold mb-3 text-yellow-400">SOX (Sarbanes-Oxley Act)</h3>
+              <p className="text-slate-300 text-sm mb-4">
+                Checks vendor contracts for financial control obligations under SOX Sections 302 and 404:
+              </p>
+              <div className="grid md:grid-cols-2 gap-3 text-slate-400 text-sm">
+                <div>• Internal controls over financial reporting</div>
+                <div>• Audit trail and logging requirements</div>
+                <div>• Segregation of duties obligations</div>
+                <div>• 7-year financial record retention</div>
+                <div>• IT general controls (ITGC)</div>
+                <div>• Right to audit financial controls</div>
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* Why Trust Us Section - NEW */}
+        {/* Why Trust Us Section */}
         <section className="mb-16 bg-slate-800/50 rounded-xl p-8 border border-slate-700/50">
           <h2 className="text-3xl font-bold text-center mb-4">Built by Legal Ops Experts</h2>
           <p className="text-slate-300 text-center max-w-3xl mx-auto mb-6">
@@ -1555,7 +1660,8 @@ export default function App() {
         <Route path="/blog/why-clms-fall-short-compliance" element={<Post3 />} />
         <Route path="/blog/gdpr-contract-compliance-gaps" element={<Post4 />} />
         <Route path="/blog/soc2-audit-contract-compliance" element={<Post5 />} />
-        <Route path="/blog/ai-contract-analysis-beyond-hype" element={<Post6 />} />       <Route path="/blog/grmc-ai-ranks-number-1-compliance-visibility" element={<Post1 />} />
+        <Route path="/blog/ai-contract-analysis-beyond-hype" element={<Post6 />} />
+        <Route path="/blog/grmc-ai-ranks-number-1-compliance-visibility" element={<Post1 />} />
         <Route path="/blog/gdpr-article-28-checklist-vendor-contracts" element={<Post2 />} />
       </Routes>
     </BrowserRouter>
