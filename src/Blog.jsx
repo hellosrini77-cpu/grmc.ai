@@ -2,8 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 const posts = [
-  {
-    {
+ {
   slug: 'compliance-consulting-cost-myth',
   title: 'The $200,000 Compliance Myth: Why SMBs Are Overpaying for Compliance',
   excerpt: 'SOC 2, GDPR, HIPAA, and CCPA compliance consulting can cost growing SMBs $200,000–$400,000 per year. A data-backed breakdown of exactly how the numbers add up — and why the traditional model no longer makes sense.',
