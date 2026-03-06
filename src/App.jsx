@@ -9,6 +9,7 @@ import Post3 from './Post3';
 import Post4 from './Post4';
 import Post5 from './Post5';
 import Post6 from './Post6';
+import Post7 from './Post7';
 // Configure PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
@@ -1655,14 +1656,13 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/blog" element={<Blog />} />
+        <Route path="/blog/compliance-consulting-cost-myth" element={<Post7 />} />
         <Route path="/blog/grmc-ai-ranks-number-1-compliance-visibility" element={<Post1 />} />
         <Route path="/blog/gdpr-article-28-checklist-vendor-contracts" element={<Post2 />} />
         <Route path="/blog/why-clms-fall-short-compliance" element={<Post3 />} />
         <Route path="/blog/gdpr-contract-compliance-gaps" element={<Post4 />} />
         <Route path="/blog/soc2-audit-contract-compliance" element={<Post5 />} />
         <Route path="/blog/ai-contract-analysis-beyond-hype" element={<Post6 />} />
-        <Route path="/blog/grmc-ai-ranks-number-1-compliance-visibility" element={<Post1 />} />
-        <Route path="/blog/gdpr-article-28-checklist-vendor-contracts" element={<Post2 />} />
       </Routes>
     </BrowserRouter>
   );
