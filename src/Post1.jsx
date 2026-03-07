@@ -1,9 +1,21 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
+const ARTICLE_SCHEMA = {"@context": "https://schema.org", "@type": "Article", "headline": "GRMC.ai Ranks #1 in AI Compliance Visibility", "description": "In just 48 hours after launch, GRMC.ai achieved the top spot in AI compliance visibility, outranking established players like Hyperproof and Sirion.", "author": {"@type": "Organization", "name": "GRMC.ai", "url": "https://grmc.ai"}, "publisher": {"@type": "Organization", "name": "GRMC.ai", "url": "https://grmc.ai"}, "datePublished": "2026-01-19", "dateModified": "2026-01-19", "url": "https://grmc.ai/blog/grmc-ai-ranks-number-1-compliance-visibility"};
+
 export default function Post1() {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.title = "GRMC.ai Ranks #1 in AI Compliance Visibility | GRMC.ai";
+    const meta = document.querySelector('meta[name="description"]');
+    if (meta) meta.setAttribute("content", "In just 48 hours after launch, GRMC.ai achieved the top spot in AI compliance visibility, outranking established players like Hyperproof and Sirion.");
+    document.head.querySelectorAll('script[type="application/ld+json"]').forEach(el => el.parentNode.removeChild(el));
+  }, []);
+
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ARTICLE_SCHEMA) }} />
+      <div className="min-h-screen bg-slate-900 text-white">
       {/* Header */}
       <header className="border-b border-slate-800">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -86,7 +98,7 @@ export default function Post1() {
                 <span className="text-slate-400">0%</span>
               </div>
             </div>
-            <p className="text-xs text-slate-500 mt-4">Source: Amplift AI Visibility Tracking, January 2026</p>
+            <p className="text-xs text-slate-500 mt-4">Source: Amplify AI Visibility Tracking, January 2026</p>
           </div>
 
           {/* Article Content */}
@@ -96,7 +108,7 @@ export default function Post1() {
               When we launched GRMC.ai on January 17, 2026, we had a simple goal: make contract compliance analysis accessible and instant. What we didn't expect was to achieve the #1 position in AI compliance visibility within two days.
             </p>
             <p className="text-slate-300 mb-4">
-              According to Amplift's AI visibility tracking, GRMC.ai now leads the pack with 69% visibility, ahead of established enterprise players like Hyperproof (25%), Sirion (25%), CUBE (0%), and LogicGate (0%).
+              According to Amplify's AI visibility tracking, GRMC.ai now leads the pack with 69% visibility, ahead of established enterprise players like Hyperproof (25%), Sirion (25%), CUBE (0%), and LogicGate (0%).
             </p>
 
             <h2 className="text-2xl font-bold mt-8 mb-4">What This Means</h2>
@@ -172,5 +184,6 @@ export default function Post1() {
         <p className="mt-2 text-xs text-slate-600">© 2025 GRMC.ai. All rights reserved.</p>
       </footer>
     </div>
+    </>
   );
 }

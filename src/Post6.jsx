@@ -1,9 +1,23 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
+const ARTICLE_SCHEMA = {"@context": "https://schema.org", "@type": "Article", "headline": "AI-Powered Contract Analysis: Beyond the Hype and Into Real Legal Operations Value", "description": "Every legal tech vendor claims AI-powered contract analysis. Here is what real AI capabilities look like vs. the hype and what actually delivers legal ops value.", "author": {"@type": "Organization", "name": "GRMC.ai", "url": "https://grmc.ai"}, "publisher": {"@type": "Organization", "name": "GRMC.ai", "url": "https://grmc.ai"}, "datePublished": "2026-01-31", "dateModified": "2026-01-31", "url": "https://grmc.ai/blog/ai-contract-analysis-beyond-hype"};
+const FAQ_SCHEMA = {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What is AI-powered contract analysis?", "acceptedAnswer": {"@type": "Answer", "text": "Real AI-powered contract analysis uses large language models to understand contract language in context, identify compliance gaps against specific regulatory frameworks, and generate remediation recommendations rather than just keyword matching or clause tagging."}}, {"@type": "Question", "name": "How is real AI contract analysis different from CLM AI features?", "acceptedAnswer": {"@type": "Answer", "text": "CLM AI features typically offer OCR, basic clause identification, and keyword search. Real AI contract analysis understands regulatory obligations, performs gap analysis against frameworks like GDPR and SOC 2, and provides specific replacement clauses."}}]};
+
 export default function Post6() {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.title = "AI-Powered Contract Analysis: Beyond the Hype | GRMC.ai";
+    const meta = document.querySelector('meta[name="description"]');
+    if (meta) meta.setAttribute("content", "Every legal tech vendor claims AI-powered contract analysis. Here is what real AI capabilities look like vs. the hype and what actually delivers legal ops value.");
+    document.head.querySelectorAll('script[type="application/ld+json"]').forEach(el => el.parentNode.removeChild(el));
+  }, []);
+
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ARTICLE_SCHEMA) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_SCHEMA) }} />
+      <div className="min-h-screen bg-slate-900 text-white">
       {/* Header */}
       <header className="border-b border-slate-800">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -332,5 +346,6 @@ export default function Post6() {
         <p className="mt-2 text-xs text-slate-600">© 2025 GRMC.ai. All rights reserved.</p>
       </footer>
     </div>
+    </>
   );
 }

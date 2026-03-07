@@ -1,5 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+
+const ARTICLE_SCHEMA = {"@context": "https://schema.org", "@type": "Article", "headline": "GDPR Article 28 Checklist: What Your Vendor Contracts Must Include", "description": "A comprehensive checklist of the 10 mandatory requirements for Data Processing Agreements under GDPR Article 28.", "author": {"@type": "Organization", "name": "GRMC.ai", "url": "https://grmc.ai"}, "publisher": {"@type": "Organization", "name": "GRMC.ai", "url": "https://grmc.ai"}, "datePublished": "2026-01-19", "dateModified": "2026-01-19", "url": "https://grmc.ai/blog/gdpr-article-28-checklist-vendor-contracts"};
+const FAQ_SCHEMA = {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What is GDPR Article 28?", "acceptedAnswer": {"@type": "Answer", "text": "GDPR Article 28 requires a binding contract between data controllers and processors specifying how personal data must be handled, including obligations around instructions, security, sub-processors, breach notification, and audit rights."}}, {"@type": "Question", "name": "What must a GDPR Data Processing Agreement include?", "acceptedAnswer": {"@type": "Answer", "text": "A GDPR-compliant DPA must include 10 mandatory elements: documented processing instructions, confidentiality obligations, Article 32 security measures, sub-processor authorization, data subject rights assistance, breach notification procedures, data deletion/return at contract end, compliance documentation, audit rights, and obligation to inform the controller if instructions violate GDPR."}}, {"@type": "Question", "name": "What are the GDPR fines for non-compliant vendor contracts?", "acceptedAnswer": {"@type": "Answer", "text": "Non-compliant DPAs can result in fines up to \u20ac20 million or 4% of total worldwide annual turnover, whichever is higher, plus potential data breach liability and reputational damage."}}]};
 
 export default function Post2() {
   const checklist = [
@@ -55,8 +58,19 @@ export default function Post2() {
     }
   ];
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.title = "GDPR Article 28 Checklist: What Your Vendor Contracts Must Include | GRMC.ai";
+    const meta = document.querySelector('meta[name="description"]');
+    if (meta) meta.setAttribute("content", "A comprehensive checklist of the 10 mandatory requirements for Data Processing Agreements under GDPR Article 28.");
+    document.head.querySelectorAll('script[type="application/ld+json"]').forEach(el => el.parentNode.removeChild(el));
+  }, []);
+
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ARTICLE_SCHEMA) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_SCHEMA) }} />
+      <div className="min-h-screen bg-slate-900 text-white">
       {/* Header */}
       <header className="border-b border-slate-800">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -228,5 +242,6 @@ export default function Post2() {
         <p className="mt-2 text-xs text-slate-600">© 2025 GRMC.ai. All rights reserved.</p>
       </footer>
     </div>
+    </>
   );
 }

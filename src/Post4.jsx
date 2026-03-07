@@ -1,9 +1,23 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
+const ARTICLE_SCHEMA = {"@context": "https://schema.org", "@type": "Article", "headline": "GDPR Contract Compliance: The 7 Most Common Gaps (And How to Fix Them)", "description": "Six years after GDPR took effect, contract-level compliance gaps remain. Here are the 7 most common GDPR contract gaps and how to fix them.", "author": {"@type": "Organization", "name": "GRMC.ai", "url": "https://grmc.ai"}, "publisher": {"@type": "Organization", "name": "GRMC.ai", "url": "https://grmc.ai"}, "datePublished": "2026-01-31", "dateModified": "2026-01-31", "url": "https://grmc.ai/blog/gdpr-contract-compliance-gaps"};
+const FAQ_SCHEMA = {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What are the most common GDPR contract compliance gaps?", "acceptedAnswer": {"@type": "Answer", "text": "The 7 most common GDPR contract gaps are: missing or inadequate DPAs, vague sub-processor clauses, missing breach notification timelines, weak audit rights, unclear data deletion procedures, no DPIA cooperation clause, and outdated standard contractual clauses."}}, {"@type": "Question", "name": "How do you fix GDPR compliance gaps in vendor contracts?", "acceptedAnswer": {"@type": "Answer", "text": "Fix GDPR gaps by auditing existing DPAs against Article 28 requirements, prioritizing vendors handling sensitive data, negotiating contract amendments to close specific gaps, and using AI-powered tools like GRMC.ai to automate gap identification and generate replacement clauses."}}]};
+
 export default function Post4() {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.title = "GDPR Contract Compliance: The 7 Most Common Gaps | GRMC.ai";
+    const meta = document.querySelector('meta[name="description"]');
+    if (meta) meta.setAttribute("content", "Six years after GDPR took effect, contract-level compliance gaps remain. Here are the 7 most common GDPR contract gaps and how to fix them.");
+    document.head.querySelectorAll('script[type="application/ld+json"]').forEach(el => el.parentNode.removeChild(el));
+  }, []);
+
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ARTICLE_SCHEMA) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_SCHEMA) }} />
+      <div className="min-h-screen bg-slate-900 text-white">
       {/* Header */}
       <header className="border-b border-slate-800">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -279,5 +293,6 @@ export default function Post4() {
         <p className="mt-2 text-xs text-slate-600">© 2025 GRMC.ai. All rights reserved.</p>
       </footer>
     </div>
+    </>
   );
 }

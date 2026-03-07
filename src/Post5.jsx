@@ -1,9 +1,23 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
+const ARTICLE_SCHEMA = {"@context": "https://schema.org", "@type": "Article", "headline": "SOC 2 Audit Prep: The Contract Compliance Checklist Your Auditors Are Looking For", "description": "Your SOC 2 audit is in 90 days. Here is the vendor contract compliance checklist your auditors are looking for and how to prepare.", "author": {"@type": "Organization", "name": "GRMC.ai", "url": "https://grmc.ai"}, "publisher": {"@type": "Organization", "name": "GRMC.ai", "url": "https://grmc.ai"}, "datePublished": "2026-01-31", "dateModified": "2026-01-31", "url": "https://grmc.ai/blog/soc2-audit-contract-compliance"};
+const FAQ_SCHEMA = {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What do SOC 2 auditors look for in vendor contracts?", "acceptedAnswer": {"@type": "Answer", "text": "SOC 2 auditors look for vendor contracts that include annual SOC 2 Type II report requirements, security incident notification obligations, encryption requirements, access controls, business continuity provisions, right-to-audit clauses, and subcontractor security flow-down requirements."}}, {"@type": "Question", "name": "How do vendor contracts affect SOC 2 compliance?", "acceptedAnswer": {"@type": "Answer", "text": "Your SOC 2 commitments flow down to your vendors. If vendor contracts do not contain matching security obligations, auditors will flag gaps between your stated controls and your vendor management practices."}}]};
+
 export default function Post5() {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.title = "SOC 2 Audit Prep: The Contract Compliance Checklist | GRMC.ai";
+    const meta = document.querySelector('meta[name="description"]');
+    if (meta) meta.setAttribute("content", "Your SOC 2 audit is in 90 days. Here is the vendor contract compliance checklist your auditors are looking for and how to prepare.");
+    document.head.querySelectorAll('script[type="application/ld+json"]').forEach(el => el.parentNode.removeChild(el));
+  }, []);
+
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ARTICLE_SCHEMA) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_SCHEMA) }} />
+      <div className="min-h-screen bg-slate-900 text-white">
       {/* Header */}
       <header className="border-b border-slate-800">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -311,5 +325,6 @@ export default function Post5() {
         <p className="mt-2 text-xs text-slate-600">© 2025 GRMC.ai. All rights reserved.</p>
       </footer>
     </div>
+    </>
   );
 }
