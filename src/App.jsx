@@ -22,6 +22,8 @@ const FRAMEWORKS = [
   { key: 'sox', label: 'SOX', fullName: 'SOX (Sarbanes-Oxley)' },
   { key: 'cmmc', label: 'CMMC', fullName: 'CMMC (Cybersecurity Maturity Model)' },
   { key: 'nist171', label: 'NIST 800-171', fullName: 'NIST SP 800-171' },
+  { key: 'pcidss', label: 'PCI DSS', fullName: 'PCI DSS (Payment Card Industry)' },
+  { key: 'fedramp', label: 'FedRAMP', fullName: 'FedRAMP Authorization' },
 ];
 
 // Generate a simple hash for contract text to use as an identifier
@@ -70,6 +72,8 @@ const saveToHistory = (identifier, fileName, results) => {
       sox: results.sox?.score,
       cmmc: results.cmmc?.score,
       nist171: results.nist171?.score,
+      pcidss: results.pcidss?.score,
+      fedramp: results.fedramp?.score,
     }
   });
   
@@ -795,7 +799,7 @@ function Home() {
             Stop Manually Reviewing Vendor Contracts for <span className="text-blue-400">Compliance</span>
           </h1>
           <p className="text-slate-300 text-xl max-w-3xl mx-auto mb-4">
-            AI-powered gap analysis for GDPR, SOC 2, CCPA, HIPAA, ISO 27001, SOX, CMMC, and NIST 800-171. Upload a contract, get instant compliance assessment in minutes.
+            AI-powered gap analysis for GDPR, SOC 2, CCPA, HIPAA, ISO 27001, SOX, CMMC, NIST 800-171, PCI DSS, and FedRAMP. Upload a contract, get instant compliance assessment in minutes.
           </p>
           <p className="text-slate-500 text-sm max-w-2xl mx-auto">
             Your CLM tells you what's in the contract. <span className="text-blue-400 font-semibold">GRMC.ai tells you if it's compliant</span>.
@@ -806,7 +810,7 @@ function Home() {
           <h2 className="text-2xl font-bold mb-4 text-center">The Compliance Gap in Modern Contract Management</h2>
           <p className="text-slate-300 mb-4 text-center max-w-3xl mx-auto">Legal and compliance teams face a critical challenge:</p>
           <div className="grid md:grid-cols-2 gap-4 max-w-4xl mx-auto">
-            <div className="bg-slate-900/50 rounded-lg p-4"><div className="text-red-400 mb-2">⚠️</div><p className="text-slate-300 text-sm">Vendor contracts require compliance verification (GDPR, SOC 2, HIPAA, ISO 27001, SOX, CMMC, NIST 800-171)</p></div>
+            <div className="bg-slate-900/50 rounded-lg p-4"><div className="text-red-400 mb-2">⚠️</div><p className="text-slate-300 text-sm">Vendor contracts require compliance verification (GDPR, SOC 2, HIPAA, ISO 27001, SOX, CMMC, NIST 800-171, PCI DSS, FedRAMP)</p></div>
             <div className="bg-slate-900/50 rounded-lg p-4"><div className="text-red-400 mb-2">⚠️</div><p className="text-slate-300 text-sm">CLM systems extract data but don't judge compliance</p></div>
             <div className="bg-slate-900/50 rounded-lg p-4"><div className="text-red-400 mb-2">⚠️</div><p className="text-slate-300 text-sm">Manual review takes 2-4 hours per contract</p></div>
             <div className="bg-slate-900/50 rounded-lg p-4"><div className="text-red-400 mb-2">⚠️</div><p className="text-slate-300 text-sm">Compliance mistakes are costly (fines, audit failures, deal delays)</p></div>
@@ -856,6 +860,8 @@ function Home() {
                 <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-yellow-500"></span><span className="text-slate-400">SOX</span></div>
                 <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-red-500"></span><span className="text-slate-400">CMMC</span></div>
                 <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-indigo-500"></span><span className="text-slate-400">NIST 800-171</span></div>
+                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-500"></span><span className="text-slate-400">PCI DSS</span></div>
+                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-cyan-500"></span><span className="text-slate-400">FedRAMP</span></div>
               </div>
             </div>
 
@@ -911,7 +917,7 @@ function Home() {
             </div>
             <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
               <h3 className="text-xl font-semibold mb-3 text-purple-400">Compliance Officers</h3>
-              <p className="text-slate-300 text-sm mb-4">Compliance and risk teams preparing for audits need to verify all vendor contracts meet framework requirements. GRMC.ai provides automated verification and audit-ready documentation across all eight frameworks.</p>
+              <p className="text-slate-300 text-sm mb-4">Compliance and risk teams preparing for audits need to verify all vendor contracts meet framework requirements. GRMC.ai provides automated verification and audit-ready documentation across all ten frameworks.</p>
               <ul className="text-slate-400 text-sm space-y-2"><li>• Preparing for compliance audits</li><li>• Managing third-party risk programs</li><li>• Need audit documentation and evidence</li><li>• Tracking compliance across vendors</li></ul>
             </div>
             <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
@@ -924,7 +930,7 @@ function Home() {
 
         <section className="mb-16">
           <h2 className="text-3xl font-bold text-center mb-4">Supported Compliance Frameworks</h2>
-          <p className="text-slate-400 text-center mb-8 max-w-2xl mx-auto">GRMC.ai provides automated gap analysis against eight major compliance frameworks</p>
+          <p className="text-slate-400 text-center mb-8 max-w-2xl mx-auto">GRMC.ai provides automated gap analysis against ten major compliance frameworks</p>
           <div className="space-y-6">
             <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
               <h3 className="text-xl font-semibold mb-3 text-blue-400">GDPR Article 28 (Data Processing Agreements)</h3>
@@ -965,6 +971,16 @@ function Home() {
               <h3 className="text-xl font-semibold mb-3 text-indigo-400">NIST SP 800-171 (Protecting CUI)</h3>
               <p className="text-slate-300 text-sm mb-4">Analyzes contracts for Controlled Unclassified Information protection requirements:</p>
               <div className="grid md:grid-cols-2 gap-3 text-slate-400 text-sm"><div>• Explicit NIST 800-171 reference or CUI obligations</div><div>• Access control and least privilege (3.1)</div><div>• Audit and accountability requirements (3.3)</div><div>• Incident response plan obligations (3.6)</div><div>• System Security Plan (SSP) requirement</div><div>• Subcontractor flow-down for CUI handling</div></div>
+            </div>
+            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+              <h3 className="text-xl font-semibold mb-3 text-emerald-400">PCI DSS (Payment Card Industry Data Security Standard)</h3>
+              <p className="text-slate-300 text-sm mb-4">Verifies contracts include required payment card data security obligations:</p>
+              <div className="grid md:grid-cols-2 gap-3 text-slate-400 text-sm"><div>• Cardholder data protection and encryption</div><div>• Prohibition on storing sensitive auth data</div><div>• Cardholder data environment (CDE) access controls</div><div>• Annual PCI DSS assessment or SAQ requirement</div><div>• Immediate breach notification obligations</div><div>• Subcontractor PCI DSS flow-down requirements</div></div>
+            </div>
+            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+              <h3 className="text-xl font-semibold mb-3 text-cyan-400">FedRAMP (Federal Risk and Authorization Management Program)</h3>
+              <p className="text-slate-300 text-sm mb-4">Analyzes contracts for federal cloud service authorization requirements:</p>
+              <div className="grid md:grid-cols-2 gap-3 text-slate-400 text-sm"><div>• FedRAMP ATO or P-ATO authorization level</div><div>• NIST SP 800-53 control implementation</div><div>• Continuous monitoring (ConMon) obligations</div><div>• Federal data residency requirements (US soil)</div><div>• FIPS 140-2/3 validated encryption required</div><div>• 3PAO right-to-audit provisions</div></div>
             </div>
           </div>
         </section>
