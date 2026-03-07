@@ -20,6 +20,8 @@ const FRAMEWORKS = [
   { key: 'hipaa', label: 'HIPAA BAA', fullName: 'HIPAA Business Associate' },
   { key: 'iso27001', label: 'ISO 27001', fullName: 'ISO 27001' },
   { key: 'sox', label: 'SOX', fullName: 'SOX (Sarbanes-Oxley)' },
+  { key: 'cmmc', label: 'CMMC', fullName: 'CMMC (Cybersecurity Maturity Model)' },
+  { key: 'nist171', label: 'NIST 800-171', fullName: 'NIST SP 800-171' },
 ];
 
 // Generate a simple hash for contract text to use as an identifier
@@ -66,6 +68,8 @@ const saveToHistory = (identifier, fileName, results) => {
       hipaa: results.hipaa?.score,
       iso27001: results.iso27001?.score,
       sox: results.sox?.score,
+      cmmc: results.cmmc?.score,
+      nist171: results.nist171?.score,
     }
   });
   
@@ -182,7 +186,6 @@ function Home() {
 
   // Analyze all contracts sequentially
   const analyzeContracts = async () => {
-    // Determine what to analyze
     const filesToAnalyze = uploadedFiles.length > 0 
       ? uploadedFiles.filter(f => f.text && !f.error)
       : contractText.trim() 
@@ -207,7 +210,6 @@ function Home() {
       setCurrentFileIndex(i + 1);
 
       try {
-        // Get previous analysis for delta tracking
         const prevAnalysis = getPreviousAnalysis(file.id);
 
         const response = await fetch('/api/analyze', {
@@ -224,7 +226,6 @@ function Home() {
 
         const data = await response.json();
         
-        // Save to history
         saveToHistory(file.id, file.name, data);
 
         results.push({
@@ -250,7 +251,6 @@ function Home() {
     setExpandedResult(0);
     setAnalyzing(false);
     
-    // Auto-select first applicable framework from first successful result
     const firstSuccess = results.find(r => r.results);
     if (firstSuccess) {
       const firstApplicable = FRAMEWORKS.find(f => firstSuccess.results[f.key]?.applicable !== false);
@@ -258,7 +258,7 @@ function Home() {
     }
   };
 
-  // Generate PDF Report for a specific result
+  // Generate PDF Report
   const exportPdfReport = (resultIndex) => {
     const resultData = allResults[resultIndex];
     if (!resultData?.results) return;
@@ -282,32 +282,25 @@ function Home() {
         }
       };
       
-      // Header
       doc.setFillColor(30, 41, 59);
       doc.rect(0, 0, pageWidth, 40, 'F');
-      
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(24);
       doc.setFont('helvetica', 'bold');
       doc.text('GRMC.ai', margin, 18);
-      
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
       doc.text('Contract Compliance Report', margin, 28);
-      
       doc.setFontSize(9);
       doc.text(`Generated: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}`, margin, 35);
-      
       if (fileName) {
         doc.text(`Document: ${fileName}`, pageWidth - margin - doc.getTextWidth(`Document: ${fileName}`), 35);
       }
       
       y = 55;
       
-      // Overall Score Section
       doc.setFillColor(51, 65, 85);
       doc.roundedRect(margin, y - 5, pageWidth - 2 * margin, 35, 3, 3, 'F');
-      
       doc.setTextColor(148, 163, 184);
       doc.setFontSize(10);
       doc.text('OVERALL COMPLIANCE SCORE', margin + 10, y + 5);
@@ -330,7 +323,7 @@ function Home() {
         doc.text(`${deltaText} vs previous`, margin + 55, y + 25);
       }
       
-      let scoreX = pageWidth - margin - 150;
+      let scoreX = pageWidth - margin - 200;
       FRAMEWORKS.forEach(fw => {
         const fwData = results[fw.key];
         const fwScore = fwData?.applicable === false ? 'N/A' : `${fwData?.score || 0}%`;
@@ -338,17 +331,14 @@ function Home() {
                         fwData?.score >= 80 ? [74, 222, 128] :
                         fwData?.score >= 60 ? [250, 204, 21] :
                         fwData?.score >= 40 ? [251, 146, 60] : [248, 113, 113];
-        
         doc.setTextColor(148, 163, 184);
         doc.setFontSize(7);
         doc.setFont('helvetica', 'normal');
         doc.text(fw.label, scoreX, y + 5);
-        
         doc.setTextColor(...fwColor);
         doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
         doc.text(fwScore, scoreX, y + 15);
-        
         scoreX += 25;
       });
       
@@ -367,22 +357,16 @@ function Home() {
       FRAMEWORKS.forEach(fw => {
         const fwData = results[fw.key];
         if (!fwData) return;
-        
         checkPageBreak(50);
-        
         doc.setFillColor(51, 65, 85);
         doc.roundedRect(margin, y - 2, pageWidth - 2 * margin, 12, 2, 2, 'F');
-        
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(11);
         doc.setFont('helvetica', 'bold');
         doc.text(fw.fullName, margin + 5, y + 6);
-        
         const fwScore = fwData.applicable === false ? 'N/A' : `${fwData.score}%`;
         doc.text(fwScore, pageWidth - margin - 20, y + 6);
-        
         y += 18;
-        
         if (fwData.applicable === false) {
           doc.setTextColor(100, 116, 139);
           doc.setFontSize(9);
@@ -391,19 +375,11 @@ function Home() {
           y += 15;
           return;
         }
-        
         if (fwData.checklist) {
           fwData.checklist.forEach(item => {
             checkPageBreak(20);
-            
-            if (item.present) {
-              doc.setTextColor(74, 222, 128);
-              doc.text('✓', margin + 5, y);
-            } else {
-              doc.setTextColor(248, 113, 113);
-              doc.text('✗', margin + 5, y);
-            }
-            
+            if (item.present) { doc.setTextColor(74, 222, 128); doc.text('✓', margin + 5, y); }
+            else { doc.setTextColor(248, 113, 113); doc.text('✗', margin + 5, y); }
             const reqColor = item.present ? [134, 239, 172] : [252, 165, 165];
             doc.setTextColor(...reqColor);
             doc.setFontSize(9);
@@ -411,7 +387,6 @@ function Home() {
             const reqLines = doc.splitTextToSize(item.requirement, pageWidth - 2 * margin - 20);
             doc.text(reqLines, margin + 15, y);
             y += reqLines.length * 4;
-            
             if (item.note) {
               doc.setTextColor(100, 116, 139);
               doc.setFontSize(7);
@@ -419,33 +394,26 @@ function Home() {
               doc.text(noteLines, margin + 15, y + 2);
               y += noteLines.length * 3 + 4;
             }
-            
             y += 4;
           });
         }
-        
         if (fwData.gaps && fwData.gaps.length > 0) {
           checkPageBreak(30);
-          
           doc.setTextColor(248, 113, 113);
           doc.setFontSize(9);
           doc.setFont('helvetica', 'bold');
           doc.text('GAPS & REMEDIATION', margin + 5, y);
           y += 8;
-          
           fwData.gaps.forEach(gap => {
             checkPageBreak(40);
-            
             doc.setFillColor(15, 23, 42);
             doc.roundedRect(margin + 5, y - 4, pageWidth - 2 * margin - 10, 8, 2, 2, 'F');
-            
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(8);
             doc.setFont('helvetica', 'bold');
             const issueLines = doc.splitTextToSize(`Issue: ${gap.issue}`, pageWidth - 2 * margin - 20);
             doc.text(issueLines, margin + 10, y + 2);
             y += issueLines.length * 4 + 4;
-
             if (gap.currentClause) {
               checkPageBreak(20);
               doc.setTextColor(248, 113, 113);
@@ -459,7 +427,6 @@ function Home() {
               doc.text(currentLines, margin + 10, y);
               y += currentLines.length * 4 + 4;
             }
-
             if (gap.replacementClause) {
               checkPageBreak(20);
               doc.setTextColor(74, 222, 128);
@@ -473,11 +440,9 @@ function Home() {
               doc.text(replLines, margin + 10, y);
               y += replLines.length * 4 + 6;
             }
-
             y += 4;
           });
         }
-        
         y += 10;
       });
       
@@ -486,24 +451,17 @@ function Home() {
         doc.setPage(i);
         doc.setTextColor(100, 116, 139);
         doc.setFontSize(8);
-        doc.text(
-          `Page ${i} of ${pageCount} | GRMC.ai - AI-Powered Contract Compliance`,
-          pageWidth / 2,
-          290,
-          { align: 'center' }
-        );
+        doc.text(`Page ${i} of ${pageCount} | GRMC.ai - AI-Powered Contract Compliance`, pageWidth / 2, 290, { align: 'center' });
       }
       
       const pdfFileName = fileName 
         ? `compliance-report-${fileName.replace(/\.[^/.]+$/, '')}.pdf`
         : `compliance-report-${new Date().toISOString().split('T')[0]}.pdf`;
-      
       doc.save(pdfFileName);
     } catch (err) {
       console.error('PDF export error:', err);
       setError('Failed to export PDF. Please try again.');
     }
-    
     setExportingPdf(false);
   };
 
@@ -511,269 +469,87 @@ function Home() {
   const emailPdfReport = async (resultIndex, email, feedback) => {
     const resultData = allResults[resultIndex];
     if (!resultData?.results) return;
-    
     const results = resultData.results;
     const fileName = resultData.fileName;
     const previousAnalysis = resultData.previousAnalysis;
-    
     setEmailSending(true);
-    
     try {
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.getWidth();
       const margin = 20;
       let y = 20;
-      
-      const checkPageBreak = (needed = 20) => {
-        if (y + needed > 280) {
-          doc.addPage();
-          y = 20;
-        }
-      };
-      
-      // Header
+      const checkPageBreak = (needed = 20) => { if (y + needed > 280) { doc.addPage(); y = 20; } };
       doc.setFillColor(30, 41, 59);
       doc.rect(0, 0, pageWidth, 40, 'F');
-      
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(24);
       doc.setFont('helvetica', 'bold');
       doc.text('GRMC.ai', margin, 18);
-      
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
       doc.text('Contract Compliance Report', margin, 28);
-      
       doc.setFontSize(9);
       doc.text(`Generated: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}`, margin, 35);
-      
-      if (fileName) {
-        doc.text(`Document: ${fileName}`, pageWidth - margin - doc.getTextWidth(`Document: ${fileName}`), 35);
-      }
-      
+      if (fileName) { doc.text(`Document: ${fileName}`, pageWidth - margin - doc.getTextWidth(`Document: ${fileName}`), 35); }
       y = 55;
-      
-      // Overall Score Section
       doc.setFillColor(51, 65, 85);
       doc.roundedRect(margin, y - 5, pageWidth - 2 * margin, 35, 3, 3, 'F');
-      
       doc.setTextColor(148, 163, 184);
       doc.setFontSize(10);
       doc.text('OVERALL COMPLIANCE SCORE', margin + 10, y + 5);
-      
-      const scoreColor = results.overallScore >= 80 ? [74, 222, 128] : 
-                         results.overallScore >= 60 ? [250, 204, 21] :
-                         results.overallScore >= 40 ? [251, 146, 60] : [248, 113, 113];
-      
+      const scoreColor = results.overallScore >= 80 ? [74, 222, 128] : results.overallScore >= 60 ? [250, 204, 21] : results.overallScore >= 40 ? [251, 146, 60] : [248, 113, 113];
       doc.setTextColor(...scoreColor);
       doc.setFontSize(28);
       doc.setFont('helvetica', 'bold');
       doc.text(`${results.overallScore}%`, margin + 10, y + 25);
-      
       if (previousAnalysis) {
         const delta = results.overallScore - previousAnalysis.overallScore;
         const deltaText = delta >= 0 ? `+${delta}%` : `${delta}%`;
-        const deltaColor = delta >= 0 ? [74, 222, 128] : [248, 113, 113];
-        doc.setTextColor(...deltaColor);
+        doc.setTextColor(...(delta >= 0 ? [74, 222, 128] : [248, 113, 113]));
         doc.setFontSize(12);
         doc.text(`${deltaText} vs previous`, margin + 55, y + 25);
       }
-      
-      let scoreX = pageWidth - margin - 150;
+      let scoreX = pageWidth - margin - 200;
       FRAMEWORKS.forEach(fw => {
         const fwData = results[fw.key];
         const fwScore = fwData?.applicable === false ? 'N/A' : `${fwData?.score || 0}%`;
-        const fwColor = fwData?.applicable === false ? [100, 116, 139] :
-                        fwData?.score >= 80 ? [74, 222, 128] :
-                        fwData?.score >= 60 ? [250, 204, 21] :
-                        fwData?.score >= 40 ? [251, 146, 60] : [248, 113, 113];
-        
-        doc.setTextColor(148, 163, 184);
-        doc.setFontSize(7);
-        doc.setFont('helvetica', 'normal');
-        doc.text(fw.label, scoreX, y + 5);
-        
-        doc.setTextColor(...fwColor);
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'bold');
-        doc.text(fwScore, scoreX, y + 15);
-        
+        const fwColor = fwData?.applicable === false ? [100, 116, 139] : fwData?.score >= 80 ? [74, 222, 128] : fwData?.score >= 60 ? [250, 204, 21] : fwData?.score >= 40 ? [251, 146, 60] : [248, 113, 113];
+        doc.setTextColor(148, 163, 184); doc.setFontSize(7); doc.setFont('helvetica', 'normal'); doc.text(fw.label, scoreX, y + 5);
+        doc.setTextColor(...fwColor); doc.setFontSize(12); doc.setFont('helvetica', 'bold'); doc.text(fwScore, scoreX, y + 15);
         scoreX += 25;
       });
-      
       y += 45;
-      
-      if (results.summary) {
-        checkPageBreak(30);
-        doc.setTextColor(100, 116, 139);
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'italic');
-        const summaryLines = doc.splitTextToSize(results.summary, pageWidth - 2 * margin);
-        doc.text(summaryLines, margin, y);
-        y += summaryLines.length * 5 + 10;
-      }
-      
+      if (results.summary) { checkPageBreak(30); doc.setTextColor(100, 116, 139); doc.setFontSize(9); doc.setFont('helvetica', 'italic'); const summaryLines = doc.splitTextToSize(results.summary, pageWidth - 2 * margin); doc.text(summaryLines, margin, y); y += summaryLines.length * 5 + 10; }
       FRAMEWORKS.forEach(fw => {
         const fwData = results[fw.key];
         if (!fwData) return;
-        
         checkPageBreak(50);
-        
-        doc.setFillColor(51, 65, 85);
-        doc.roundedRect(margin, y - 2, pageWidth - 2 * margin, 12, 2, 2, 'F');
-        
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(11);
-        doc.setFont('helvetica', 'bold');
-        doc.text(fw.fullName, margin + 5, y + 6);
-        
+        doc.setFillColor(51, 65, 85); doc.roundedRect(margin, y - 2, pageWidth - 2 * margin, 12, 2, 2, 'F');
+        doc.setTextColor(255, 255, 255); doc.setFontSize(11); doc.setFont('helvetica', 'bold'); doc.text(fw.fullName, margin + 5, y + 6);
         const fwScore = fwData.applicable === false ? 'N/A' : `${fwData.score}%`;
-        doc.text(fwScore, pageWidth - margin - 20, y + 6);
-        
-        y += 18;
-        
-        if (fwData.applicable === false) {
-          doc.setTextColor(100, 116, 139);
-          doc.setFontSize(9);
-          doc.setFont('helvetica', 'italic');
-          doc.text('This framework may not be applicable to this contract type', margin + 5, y);
-          y += 15;
-          return;
-        }
-        
-        if (fwData.checklist) {
-          fwData.checklist.forEach(item => {
-            checkPageBreak(20);
-            
-            if (item.present) {
-              doc.setTextColor(74, 222, 128);
-              doc.text('✓', margin + 5, y);
-            } else {
-              doc.setTextColor(248, 113, 113);
-              doc.text('✗', margin + 5, y);
-            }
-            
-            const reqColor = item.present ? [134, 239, 172] : [252, 165, 165];
-            doc.setTextColor(...reqColor);
-            doc.setFontSize(9);
-            doc.setFont('helvetica', 'normal');
-            const reqLines = doc.splitTextToSize(item.requirement, pageWidth - 2 * margin - 20);
-            doc.text(reqLines, margin + 15, y);
-            y += reqLines.length * 4;
-            
-            if (item.note) {
-              doc.setTextColor(100, 116, 139);
-              doc.setFontSize(7);
-              const noteLines = doc.splitTextToSize(item.note, pageWidth - 2 * margin - 20);
-              doc.text(noteLines, margin + 15, y + 2);
-              y += noteLines.length * 3 + 4;
-            }
-            
-            y += 4;
-          });
-        }
-        
-        if (fwData.gaps && fwData.gaps.length > 0) {
-          checkPageBreak(30);
-          
-          doc.setTextColor(248, 113, 113);
-          doc.setFontSize(9);
-          doc.setFont('helvetica', 'bold');
-          doc.text('GAPS & REMEDIATION', margin + 5, y);
-          y += 8;
-          
-          fwData.gaps.forEach(gap => {
-            checkPageBreak(40);
-            
-            doc.setFillColor(15, 23, 42);
-            doc.roundedRect(margin + 5, y - 4, pageWidth - 2 * margin - 10, 8, 2, 2, 'F');
-            
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(8);
-            doc.setFont('helvetica', 'bold');
-            const issueLines = doc.splitTextToSize(`Issue: ${gap.issue}`, pageWidth - 2 * margin - 20);
-            doc.text(issueLines, margin + 10, y + 2);
-            y += issueLines.length * 4 + 4;
-
-            if (gap.currentClause) {
-              checkPageBreak(20);
-              doc.setTextColor(248, 113, 113);
-              doc.setFontSize(7);
-              doc.setFont('helvetica', 'bold');
-              doc.text('CURRENT CLAUSE:', margin + 10, y);
-              y += 4;
-              doc.setTextColor(252, 165, 165);
-              doc.setFont('helvetica', 'italic');
-              const currentLines = doc.splitTextToSize(gap.currentClause, pageWidth - 2 * margin - 20);
-              doc.text(currentLines, margin + 10, y);
-              y += currentLines.length * 4 + 4;
-            }
-
-            if (gap.replacementClause) {
-              checkPageBreak(20);
-              doc.setTextColor(74, 222, 128);
-              doc.setFontSize(7);
-              doc.setFont('helvetica', 'bold');
-              doc.text('REPLACEMENT CLAUSE:', margin + 10, y);
-              y += 4;
-              doc.setTextColor(134, 239, 172);
-              doc.setFont('helvetica', 'normal');
-              const replLines = doc.splitTextToSize(gap.replacementClause, pageWidth - 2 * margin - 20);
-              doc.text(replLines, margin + 10, y);
-              y += replLines.length * 4 + 6;
-            }
-
-            y += 4;
-          });
-        }
-        
+        doc.text(fwScore, pageWidth - margin - 20, y + 6); y += 18;
+        if (fwData.applicable === false) { doc.setTextColor(100, 116, 139); doc.setFontSize(9); doc.setFont('helvetica', 'italic'); doc.text('This framework may not be applicable to this contract type', margin + 5, y); y += 15; return; }
+        if (fwData.checklist) { fwData.checklist.forEach(item => { checkPageBreak(20); if (item.present) { doc.setTextColor(74, 222, 128); doc.text('✓', margin + 5, y); } else { doc.setTextColor(248, 113, 113); doc.text('✗', margin + 5, y); } doc.setTextColor(...(item.present ? [134, 239, 172] : [252, 165, 165])); doc.setFontSize(9); doc.setFont('helvetica', 'normal'); const reqLines = doc.splitTextToSize(item.requirement, pageWidth - 2 * margin - 20); doc.text(reqLines, margin + 15, y); y += reqLines.length * 4; if (item.note) { doc.setTextColor(100, 116, 139); doc.setFontSize(7); const noteLines = doc.splitTextToSize(item.note, pageWidth - 2 * margin - 20); doc.text(noteLines, margin + 15, y + 2); y += noteLines.length * 3 + 4; } y += 4; }); }
+        if (fwData.gaps && fwData.gaps.length > 0) { checkPageBreak(30); doc.setTextColor(248, 113, 113); doc.setFontSize(9); doc.setFont('helvetica', 'bold'); doc.text('GAPS & REMEDIATION', margin + 5, y); y += 8; fwData.gaps.forEach(gap => { checkPageBreak(40); doc.setFillColor(15, 23, 42); doc.roundedRect(margin + 5, y - 4, pageWidth - 2 * margin - 10, 8, 2, 2, 'F'); doc.setTextColor(255, 255, 255); doc.setFontSize(8); doc.setFont('helvetica', 'bold'); const issueLines = doc.splitTextToSize(`Issue: ${gap.issue}`, pageWidth - 2 * margin - 20); doc.text(issueLines, margin + 10, y + 2); y += issueLines.length * 4 + 4; if (gap.currentClause) { checkPageBreak(20); doc.setTextColor(248, 113, 113); doc.setFontSize(7); doc.setFont('helvetica', 'bold'); doc.text('CURRENT CLAUSE:', margin + 10, y); y += 4; doc.setTextColor(252, 165, 165); doc.setFont('helvetica', 'italic'); const currentLines = doc.splitTextToSize(gap.currentClause, pageWidth - 2 * margin - 20); doc.text(currentLines, margin + 10, y); y += currentLines.length * 4 + 4; } if (gap.replacementClause) { checkPageBreak(20); doc.setTextColor(74, 222, 128); doc.setFontSize(7); doc.setFont('helvetica', 'bold'); doc.text('REPLACEMENT CLAUSE:', margin + 10, y); y += 4; doc.setTextColor(134, 239, 172); doc.setFont('helvetica', 'normal'); const replLines = doc.splitTextToSize(gap.replacementClause, pageWidth - 2 * margin - 20); doc.text(replLines, margin + 10, y); y += replLines.length * 4 + 6; } y += 4; }); }
         y += 10;
       });
-      
       const pageCount = doc.internal.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setTextColor(100, 116, 139);
-        doc.setFontSize(8);
-        doc.text(
-          `Page ${i} of ${pageCount} | GRMC.ai - AI-Powered Contract Compliance`,
-          pageWidth / 2,
-          290,
-          { align: 'center' }
-        );
-      }
-      
-      // Get PDF as base64
+      for (let i = 1; i <= pageCount; i++) { doc.setPage(i); doc.setTextColor(100, 116, 139); doc.setFontSize(8); doc.text(`Page ${i} of ${pageCount} | GRMC.ai - AI-Powered Contract Compliance`, pageWidth / 2, 290, { align: 'center' }); }
       const pdfBase64 = doc.output('datauristring').split(',')[1];
-      const pdfFileName = fileName 
-        ? `compliance-report-${fileName.replace(/\.[^/.]+$/, '')}.pdf`
-        : `compliance-report-${new Date().toISOString().split('T')[0]}.pdf`;
-      
-      // Send to Apps Script
+      const pdfFileName = fileName ? `compliance-report-${fileName.replace(/\.[^/.]+$/, '')}.pdf` : `compliance-report-${new Date().toISOString().split('T')[0]}.pdf`;
       await fetch('https://script.google.com/macros/s/AKfycbxBwD27ii6uhyxC6HZwCHwYjK-aQjiR102hQc9zcnTydlpS-hCZkBAYBR2yFU9smjM/exec', {
         method: 'POST',
-        body: JSON.stringify({ 
-          email, 
-          source: 'grmc.ai',
-          feedback: feedback || '',
-          reportPdf: pdfBase64,
-          reportFileName: pdfFileName,
-          contractName: fileName || 'Pasted Text',
-          overallScore: results.overallScore
-        })
+        body: JSON.stringify({ email, source: 'grmc.ai', feedback: feedback || '', reportPdf: pdfBase64, reportFileName: pdfFileName, contractName: fileName || 'Pasted Text', overallScore: results.overallScore })
       });
-      
       setEmailReportModal({ open: false, resultIndex: null });
       alert('Report sent! Check your email.');
     } catch (err) {
       console.error('Email report error:', err);
       alert('Failed to send report. Please try again.');
     }
-    
     setEmailSending(false);
   };
 
-  // Reset everything
   const reset = () => {
     setContractText('');
     setUploadedFiles([]);
@@ -784,7 +560,6 @@ function Home() {
     setExpandedResult(0);
   };
 
-  // Get score color
   const getScoreColor = (score) => {
     if (score >= 80) return 'text-green-400';
     if (score >= 60) return 'text-yellow-400';
@@ -792,28 +567,22 @@ function Home() {
     return 'text-red-400';
   };
 
-  // Calculate delta
   const getDelta = (current, previous) => {
     if (!previous) return null;
     return current - previous;
   };
 
-  // Render delta badge
   const renderDelta = (current, previous) => {
     const delta = getDelta(current, previous);
     if (delta === null) return null;
-    
     const isPositive = delta >= 0;
     return (
-      <span className={`ml-2 text-xs px-1.5 py-0.5 rounded ${
-        isPositive ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400'
-      }`}>
+      <span className={`ml-2 text-xs px-1.5 py-0.5 rounded ${isPositive ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400'}`}>
         {isPositive ? '↑' : '↓'} {Math.abs(delta)}%
       </span>
     );
   };
 
-  // Render checklist for a framework
   const renderChecklist = (data) => (
     <div className="space-y-4">
       {data.applicable === false && (
@@ -821,34 +590,20 @@ function Home() {
           ⚠️ This framework may not be applicable to this contract type
         </div>
       )}
-      
       <div className="space-y-2">
         {data.checklist?.map((item, i) => (
-          <div key={i} className={`flex items-start gap-3 p-2 rounded-lg ${
-            item.present ? 'bg-green-900/20' : 'bg-red-900/20'
-          }`}>
-            {item.present ? (
-              <span className="text-green-400 mt-0.5">✓</span>
-            ) : (
-              <span className="text-red-400 mt-0.5">✗</span>
-            )}
+          <div key={i} className={`flex items-start gap-3 p-2 rounded-lg ${item.present ? 'bg-green-900/20' : 'bg-red-900/20'}`}>
+            {item.present ? <span className="text-green-400 mt-0.5">✓</span> : <span className="text-red-400 mt-0.5">✗</span>}
             <div>
-              <div className={item.present ? 'text-green-300' : 'text-red-300'}>
-                {item.requirement}
-              </div>
-              {item.note && (
-                <div className="text-slate-500 text-xs mt-1">{item.note}</div>
-              )}
+              <div className={item.present ? 'text-green-300' : 'text-red-300'}>{item.requirement}</div>
+              {item.note && <div className="text-slate-500 text-xs mt-1">{item.note}</div>}
             </div>
           </div>
         ))}
       </div>
-
       {data.gaps?.length > 0 && (
         <div className="mt-4">
-          <h4 className="text-sm font-semibold text-red-400 uppercase tracking-wide mb-2">
-            Gaps & Clause Replacements
-          </h4>
+          <h4 className="text-sm font-semibold text-red-400 uppercase tracking-wide mb-2">Gaps & Clause Replacements</h4>
           <div className="space-y-3">
             {data.gaps.map((gap, i) => (
               <div key={i} className="bg-slate-900 rounded-lg p-3 space-y-2">
@@ -863,10 +618,7 @@ function Home() {
                   <div>
                     <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Replacement Clause</div>
                     <div className="bg-green-950/40 border border-green-900/40 rounded p-2 text-xs text-green-300 font-mono leading-relaxed">{gap.replacementClause}</div>
-                    <button
-                      onClick={() => navigator.clipboard.writeText(gap.replacementClause)}
-                      className="mt-1 text-xs text-blue-400 hover:text-blue-300 transition-colors"
-                    >
+                    <button onClick={() => navigator.clipboard.writeText(gap.replacementClause)} className="mt-1 text-xs text-blue-400 hover:text-blue-300 transition-colors">
                       📋 Copy to clipboard
                     </button>
                   </div>
@@ -879,23 +631,15 @@ function Home() {
     </div>
   );
 
-  // Render history modal
   const renderHistoryModal = () => {
     if (!showHistory || !historyContractId) return null;
-    
     const history = getContractHistory(historyContractId);
-    
     return (
       <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
         <div className="bg-slate-800 rounded-xl max-w-lg w-full max-h-[80vh] overflow-hidden">
           <div className="p-4 border-b border-slate-700 flex justify-between items-center">
             <h3 className="text-lg font-semibold">Compliance History</h3>
-            <button 
-              onClick={() => setShowHistory(false)}
-              className="text-slate-400 hover:text-white"
-            >
-              ✕
-            </button>
+            <button onClick={() => setShowHistory(false)} className="text-slate-400 hover:text-white">✕</button>
           </div>
           <div className="p-4 overflow-y-auto max-h-[60vh]">
             {history.length === 0 ? (
@@ -905,12 +649,8 @@ function Home() {
                 {history.slice().reverse().map((analysis, i) => (
                   <div key={i} className="bg-slate-900 rounded-lg p-3">
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-slate-400 text-xs">
-                        {new Date(analysis.date).toLocaleDateString()} at {new Date(analysis.date).toLocaleTimeString()}
-                      </span>
-                      <span className={`text-lg font-bold ${getScoreColor(analysis.overallScore)}`}>
-                        {analysis.overallScore}%
-                      </span>
+                      <span className="text-slate-400 text-xs">{new Date(analysis.date).toLocaleDateString()} at {new Date(analysis.date).toLocaleTimeString()}</span>
+                      <span className={`text-lg font-bold ${getScoreColor(analysis.overallScore)}`}>{analysis.overallScore}%</span>
                     </div>
                     <div className="flex flex-wrap gap-3 text-xs">
                       {FRAMEWORKS.map(fw => (
@@ -933,79 +673,27 @@ function Home() {
     );
   };
 
-  // Render email report modal
   const renderEmailReportModal = () => {
     if (!emailReportModal.open) return null;
-    
     return (
       <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
         <div className="bg-slate-800 rounded-xl max-w-md w-full overflow-hidden">
           <div className="p-4 border-b border-slate-700 flex justify-between items-center">
             <h3 className="text-lg font-semibold">Email Report</h3>
-            <button 
-              onClick={() => setEmailReportModal({ open: false, resultIndex: null })}
-              className="text-slate-400 hover:text-white"
-            >
-              ✕
-            </button>
+            <button onClick={() => setEmailReportModal({ open: false, resultIndex: null })} className="text-slate-400 hover:text-white">✕</button>
           </div>
-          <form 
-            onSubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.target);
-              emailPdfReport(
-                emailReportModal.resultIndex,
-                formData.get('email'),
-                formData.get('feedback')
-              );
-            }}
-            className="p-4 space-y-4"
-          >
+          <form onSubmit={(e) => { e.preventDefault(); const formData = new FormData(e.target); emailPdfReport(emailReportModal.resultIndex, formData.get('email'), formData.get('feedback')); }} className="p-4 space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-400 mb-2">
-                Email address *
-              </label>
-              <input
-                type="email"
-                name="email"
-                required
-                placeholder="your@email.com"
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
-              />
+              <label className="block text-sm font-medium text-slate-400 mb-2">Email address *</label>
+              <input type="email" name="email" required placeholder="your@email.com" className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-400 mb-2">
-                Feedback (optional)
-              </label>
-              <textarea
-                name="feedback"
-                rows={3}
-                placeholder="Any issues or suggestions? We'd love to hear from you..."
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 resize-none"
-              />
+              <label className="block text-sm font-medium text-slate-400 mb-2">Feedback (optional)</label>
+              <textarea name="feedback" rows={3} placeholder="Any issues or suggestions? We'd love to hear from you..." className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 resize-none" />
               <p className="text-xs text-slate-500 mt-1">Help us improve GRMC.ai</p>
             </div>
-            <button
-              type="submit"
-              disabled={emailSending}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {emailSending ? (
-                <>
-                  <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Sending...
-                </>
-              ) : (
-                <>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                  Send Report
-                </>
-              )}
+            <button type="submit" disabled={emailSending} className="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+              {emailSending ? (<><svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Sending...</>) : (<><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>Send Report</>)}
             </button>
           </form>
         </div>
@@ -1013,145 +701,68 @@ function Home() {
     );
   };
 
-  // Render single result card
   const renderResultCard = (resultData, index) => {
     const { fileName, contractId, results, previousAnalysis, error: resultError } = resultData;
     const isExpanded = expandedResult === index;
-    
     if (resultError) {
       return (
         <div key={index} className="bg-slate-800 rounded-xl border border-red-800/50 overflow-hidden">
           <div className="p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-red-400">✗</span>
-              <span className="font-medium">{fileName}</span>
-            </div>
+            <div className="flex items-center gap-3"><span className="text-red-400">✗</span><span className="font-medium">{fileName}</span></div>
             <span className="text-red-400 text-sm">Analysis failed</span>
           </div>
         </div>
       );
     }
-    
     return (
       <div key={index} className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
-        {/* Collapsed header */}
-        <button
-          onClick={() => setExpandedResult(isExpanded ? -1 : index)}
-          className="w-full p-4 flex items-center justify-between hover:bg-slate-700/50 transition-colors"
-        >
+        <button onClick={() => setExpandedResult(isExpanded ? -1 : index)} className="w-full p-4 flex items-center justify-between hover:bg-slate-700/50 transition-colors">
           <div className="flex items-center gap-3">
-            <span className={`text-lg font-bold ${getScoreColor(results.overallScore)}`}>
-              {results.overallScore}%
-            </span>
+            <span className={`text-lg font-bold ${getScoreColor(results.overallScore)}`}>{results.overallScore}%</span>
             <span className="font-medium truncate max-w-[200px]">{fileName}</span>
             {previousAnalysis && renderDelta(results.overallScore, previousAnalysis.overallScore)}
           </div>
           <div className="flex items-center gap-4">
             <div className="hidden sm:flex gap-2 flex-wrap justify-end">
               {FRAMEWORKS.map(fw => (
-                <span key={fw.key} className={`text-xs ${
-                  results[fw.key]?.applicable === false 
-                    ? 'text-slate-600' 
-                    : getScoreColor(results[fw.key]?.score)
-                }`}>
+                <span key={fw.key} className={`text-xs ${results[fw.key]?.applicable === false ? 'text-slate-600' : getScoreColor(results[fw.key]?.score)}`}>
                   {fw.label}: {results[fw.key]?.applicable === false ? 'N/A' : `${results[fw.key]?.score}%`}
                 </span>
               ))}
             </div>
-            <svg 
-              className={`w-5 h-5 text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
+            <svg className={`w-5 h-5 text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </div>
         </button>
-        
-        {/* Expanded content */}
         {isExpanded && (
           <div className="border-t border-slate-700">
-            {/* Summary */}
-            {results.summary && (
-              <div className="p-4 border-b border-slate-700">
-                <p className="text-slate-400 text-sm">{results.summary}</p>
-              </div>
-            )}
-            
-            {/* Action buttons */}
+            {results.summary && <div className="p-4 border-b border-slate-700"><p className="text-slate-400 text-sm">{results.summary}</p></div>}
             <div className="p-4 border-b border-slate-700 flex gap-2 flex-wrap">
-              <button
-                onClick={() => exportPdfReport(index)}
-                disabled={exportingPdf}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-              >
-                {exportingPdf ? (
-                  <>
-                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    Export Report
-                  </>
-                )}
+              <button onClick={() => exportPdfReport(index)} disabled={exportingPdf} className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">
+                {exportingPdf ? (<><svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Generating...</>) : (<><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>Export Report</>)}
               </button>
-              <button
-                onClick={() => setEmailReportModal({ open: true, resultIndex: index })}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg text-sm font-medium transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
+              <button onClick={() => setEmailReportModal({ open: true, resultIndex: index })} className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg text-sm font-medium transition-colors">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
                 Email Report
               </button>
-              <button
-                onClick={() => {
-                  setHistoryContractId(contractId);
-                  setShowHistory(true);
-                }}
-                className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+              <button onClick={() => { setHistoryContractId(contractId); setShowHistory(true); }} className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium transition-colors">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 View History
               </button>
             </div>
-            
-            {/* Framework tabs */}
             <div className="flex border-b border-slate-700 overflow-x-auto">
               {FRAMEWORKS.map(fw => (
-                <button
-                  key={fw.key}
-                  onClick={() => setActiveTab(fw.key)}
-                  className={`flex-1 px-3 py-3 text-sm font-medium transition-colors whitespace-nowrap ${
-                    activeTab === fw.key
-                      ? 'bg-slate-700 text-white border-b-2 border-blue-500'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
-                  }`}
-                >
+                <button key={fw.key} onClick={() => setActiveTab(fw.key)} className={`flex-1 px-3 py-3 text-sm font-medium transition-colors whitespace-nowrap ${activeTab === fw.key ? 'bg-slate-700 text-white border-b-2 border-blue-500' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'}`}>
                   {fw.label}
                   {results[fw.key] && (
-                    <span className={`ml-1 text-xs ${
-                      results[fw.key]?.applicable === false 
-                        ? 'text-slate-600' 
-                        : getScoreColor(results[fw.key]?.score)
-                    }`}>
+                    <span className={`ml-1 text-xs ${results[fw.key]?.applicable === false ? 'text-slate-600' : getScoreColor(results[fw.key]?.score)}`}>
                       {results[fw.key]?.applicable === false ? 'N/A' : `${results[fw.key]?.score}%`}
                     </span>
                   )}
                 </button>
               ))}
             </div>
-            
             <div className="p-4 max-h-[400px] overflow-y-auto">
               {results[activeTab] && renderChecklist(results[activeTab])}
             </div>
@@ -1163,482 +774,208 @@ function Home() {
 
   return (
     <div className="min-h-screen bg-slate-900 text-white">
-      {/* History Modal */}
       {renderHistoryModal()}
-      
-      {/* Email Report Modal */}
       {renderEmailReportModal()}
-      
-      {/* Header */}
       <header className="border-b border-slate-800">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
             <img src="/logo.png" alt="GRMC.ai" className="h-10 bg-white rounded p-1" />
           </Link>
           <nav className="flex items-center gap-6">
-            <Link to="/" className="text-white font-medium">
-              Analyze
-            </Link>
-            <Link to="/blog" className="text-slate-400 hover:text-white transition-colors">
-              Blog
-            </Link>
+            <Link to="/" className="text-white font-medium">Analyze</Link>
+            <Link to="/blog" className="text-slate-400 hover:text-white transition-colors">Blog</Link>
           </nav>
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-8">
-        {/* Hero */}
         <div className="text-center mb-12">
           <img src="/logo.png" alt="GRMC.ai" className="block h-32 bg-white rounded-lg p-2 mx-auto mb-6" />
           <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight">
             Stop Manually Reviewing Vendor Contracts for <span className="text-blue-400">Compliance</span>
           </h1>
           <p className="text-slate-300 text-xl max-w-3xl mx-auto mb-4">
-            AI-powered gap analysis for GDPR Article 28, SOC 2, CCPA, HIPAA, ISO 27001, and SOX. Upload a contract, get instant compliance assessment in minutes.
+            AI-powered gap analysis for GDPR, SOC 2, CCPA, HIPAA, ISO 27001, SOX, CMMC, and NIST 800-171. Upload a contract, get instant compliance assessment in minutes.
           </p>
           <p className="text-slate-500 text-sm max-w-2xl mx-auto">
             Your CLM tells you what's in the contract. <span className="text-blue-400 font-semibold">GRMC.ai tells you if it's compliant</span>.
           </p>
         </div>
 
-        {/* Problem Statement Section */}
         <section className="mb-12 bg-slate-800/50 rounded-xl p-8 border border-slate-700/50">
           <h2 className="text-2xl font-bold mb-4 text-center">The Compliance Gap in Modern Contract Management</h2>
-          <p className="text-slate-300 mb-4 text-center max-w-3xl mx-auto">
-            Legal and compliance teams face a critical challenge:
-          </p>
+          <p className="text-slate-300 mb-4 text-center max-w-3xl mx-auto">Legal and compliance teams face a critical challenge:</p>
           <div className="grid md:grid-cols-2 gap-4 max-w-4xl mx-auto">
-            <div className="bg-slate-900/50 rounded-lg p-4">
-              <div className="text-red-400 mb-2">⚠️</div>
-              <p className="text-slate-300 text-sm">Vendor contracts require compliance verification (GDPR, SOC 2, HIPAA, ISO 27001, SOX)</p>
-            </div>
-            <div className="bg-slate-900/50 rounded-lg p-4">
-              <div className="text-red-400 mb-2">⚠️</div>
-              <p className="text-slate-300 text-sm">CLM systems extract data but don't judge compliance</p>
-            </div>
-            <div className="bg-slate-900/50 rounded-lg p-4">
-              <div className="text-red-400 mb-2">⚠️</div>
-              <p className="text-slate-300 text-sm">Manual review takes 2-4 hours per contract</p>
-            </div>
-            <div className="bg-slate-900/50 rounded-lg p-4">
-              <div className="text-red-400 mb-2">⚠️</div>
-              <p className="text-slate-300 text-sm">Compliance mistakes are costly (fines, audit failures, deal delays)</p>
-            </div>
+            <div className="bg-slate-900/50 rounded-lg p-4"><div className="text-red-400 mb-2">⚠️</div><p className="text-slate-300 text-sm">Vendor contracts require compliance verification (GDPR, SOC 2, HIPAA, ISO 27001, SOX, CMMC, NIST 800-171)</p></div>
+            <div className="bg-slate-900/50 rounded-lg p-4"><div className="text-red-400 mb-2">⚠️</div><p className="text-slate-300 text-sm">CLM systems extract data but don't judge compliance</p></div>
+            <div className="bg-slate-900/50 rounded-lg p-4"><div className="text-red-400 mb-2">⚠️</div><p className="text-slate-300 text-sm">Manual review takes 2-4 hours per contract</p></div>
+            <div className="bg-slate-900/50 rounded-lg p-4"><div className="text-red-400 mb-2">⚠️</div><p className="text-slate-300 text-sm">Compliance mistakes are costly (fines, audit failures, deal delays)</p></div>
           </div>
-          <p className="text-center text-slate-400 mt-6 font-medium">
-            Result: Bottlenecks, risk exposure, and expensive manual work that doesn't scale.
-          </p>
+          <p className="text-center text-slate-400 mt-6 font-medium">Result: Bottlenecks, risk exposure, and expensive manual work that doesn't scale.</p>
         </section>
 
-        {/* Main Upload/Analysis Area */}
         <div className="grid lg:grid-cols-5 gap-6 mb-16">
-          {/* Left: Upload & Input (2 cols) */}
           <div className="lg:col-span-2 space-y-4">
-            {/* File Upload */}
             <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
               <label className="block text-sm font-medium text-slate-400 mb-3">Contract Documents</label>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf,.txt,.doc,.docx"
-                multiple
-                onChange={handleFileUpload}
-                className="hidden"
-              />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full border-2 border-dashed border-slate-600 rounded-lg p-6 text-center hover:border-blue-500 hover:bg-slate-700/50 transition-all cursor-pointer"
-              >
+              <input ref={fileInputRef} type="file" accept=".pdf,.txt,.doc,.docx" multiple onChange={handleFileUpload} className="hidden" />
+              <button onClick={() => fileInputRef.current?.click()} className="w-full border-2 border-dashed border-slate-600 rounded-lg p-6 text-center hover:border-blue-500 hover:bg-slate-700/50 transition-all cursor-pointer">
                 {extracting ? (
-                  <div className="text-blue-400">
-                    <svg className="animate-spin h-8 w-8 mx-auto mb-2" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Extracting text...
-                  </div>
+                  <div className="text-blue-400"><svg className="animate-spin h-8 w-8 mx-auto mb-2" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Extracting text...</div>
                 ) : uploadedFiles.length > 0 ? (
-                  <div>
-                    <div className="text-green-400 mb-1">✓ {uploadedFiles.length} file{uploadedFiles.length > 1 ? 's' : ''} loaded</div>
-                    <div className="text-slate-400 text-sm mb-2">
-                      {uploadedFiles.map(f => f.name).join(', ')}
-                    </div>
-                    <div className="text-slate-500 text-sm">Click to upload different files</div>
-                  </div>
+                  <div><div className="text-green-400 mb-1">✓ {uploadedFiles.length} file{uploadedFiles.length > 1 ? 's' : ''} loaded</div><div className="text-slate-400 text-sm mb-2">{uploadedFiles.map(f => f.name).join(', ')}</div><div className="text-slate-500 text-sm">Click to upload different files</div></div>
                 ) : (
-                  <div>
-                    <svg className="w-10 h-10 mx-auto mb-2 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                    <div className="text-slate-300 font-medium">Upload PDF or text files</div>
-                    <div className="text-slate-500 text-sm mt-1">DPA, MSA, BAA, Vendor Agreements</div>
-                    <div className="text-blue-400 text-xs mt-2">Supports multiple files</div>
-                  </div>
+                  <div><svg className="w-10 h-10 mx-auto mb-2 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg><div className="text-slate-300 font-medium">Upload PDF or text files</div><div className="text-slate-500 text-sm mt-1">DPA, MSA, BAA, Vendor Agreements</div><div className="text-blue-400 text-xs mt-2">Supports multiple files</div></div>
                 )}
               </button>
             </div>
 
-            {/* Text Input */}
             <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
-              <label className="block text-sm font-medium text-slate-400 mb-3">
-                Or paste contract text
-              </label>
-              <textarea
-                value={contractText}
-                onChange={(e) => {
-                  setContractText(e.target.value);
-                  if (e.target.value) setUploadedFiles([]);
-                }}
-                placeholder="Paste your contract text here..."
-                className="w-full h-32 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 resize-none"
-              />
+              <label className="block text-sm font-medium text-slate-400 mb-3">Or paste contract text</label>
+              <textarea value={contractText} onChange={(e) => { setContractText(e.target.value); if (e.target.value) setUploadedFiles([]); }} placeholder="Paste your contract text here..." className="w-full h-32 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 resize-none" />
               <div className="flex justify-between items-center mt-2 text-xs text-slate-500">
                 <span>{contractText.length.toLocaleString()} characters</span>
-                {contractText && (
-                  <button onClick={() => setContractText('')} className="text-slate-400 hover:text-white">
-                    Clear
-                  </button>
-                )}
+                {contractText && <button onClick={() => setContractText('')} className="text-slate-400 hover:text-white">Clear</button>}
               </div>
             </div>
 
-            {/* Analyze Button */}
-            <button
-              onClick={analyzeContracts}
-              disabled={analyzing || (!contractText.trim() && uploadedFiles.length === 0)}
-              className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
-                analyzing || (!contractText.trim() && uploadedFiles.length === 0)
-                  ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-500 text-white'
-              }`}
-            >
-              {analyzing ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Analyzing {currentFileIndex} of {totalFiles}...
-                </span>
-              ) : uploadedFiles.length > 1 ? (
-                `Analyze ${uploadedFiles.length} Contracts`
-              ) : (
-                'Analyze Compliance'
-              )}
+            <button onClick={analyzeContracts} disabled={analyzing || (!contractText.trim() && uploadedFiles.length === 0)} className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${analyzing || (!contractText.trim() && uploadedFiles.length === 0) ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500 text-white'}`}>
+              {analyzing ? (<span className="flex items-center justify-center gap-2"><svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Analyzing {currentFileIndex} of {totalFiles}...</span>) : uploadedFiles.length > 1 ? `Analyze ${uploadedFiles.length} Contracts` : 'Analyze Compliance'}
             </button>
 
-            {error && (
-              <div className="bg-red-900/30 border border-red-800 rounded-lg p-3 text-red-400 text-sm">
-                {error}
-              </div>
-            )}
+            {error && <div className="bg-red-900/30 border border-red-800 rounded-lg p-3 text-red-400 text-sm">{error}</div>}
 
-            {/* Frameworks Legend */}
             <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
               <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-3">Frameworks Analyzed</div>
               <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                  <span className="text-slate-400">GDPR Article 28</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-purple-500"></span>
-                  <span className="text-slate-400">SOC 2</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-orange-500"></span>
-                  <span className="text-slate-400">CCPA/CPRA</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-pink-500"></span>
-                  <span className="text-slate-400">HIPAA BAA</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-teal-500"></span>
-                  <span className="text-slate-400">ISO 27001</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
-                  <span className="text-slate-400">SOX</span>
-                </div>
+                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-blue-500"></span><span className="text-slate-400">GDPR Article 28</span></div>
+                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-purple-500"></span><span className="text-slate-400">SOC 2</span></div>
+                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-orange-500"></span><span className="text-slate-400">CCPA/CPRA</span></div>
+                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-pink-500"></span><span className="text-slate-400">HIPAA BAA</span></div>
+                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-teal-500"></span><span className="text-slate-400">ISO 27001</span></div>
+                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-yellow-500"></span><span className="text-slate-400">SOX</span></div>
+                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-red-500"></span><span className="text-slate-400">CMMC</span></div>
+                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-indigo-500"></span><span className="text-slate-400">NIST 800-171</span></div>
               </div>
             </div>
 
-            {/* Privacy Banner */}
             <div className="bg-green-900/20 rounded-xl p-4 border border-green-800/30">
               <div className="flex items-start gap-3">
-                <svg className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-                <div>
-                  <div className="text-green-400 text-sm font-medium">Your data is safe</div>
-                  <div className="text-slate-400 text-xs mt-1">Contracts are analyzed in real-time and never stored. Your data is not retained or used for AI training.</div>
-                </div>
+                <svg className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                <div><div className="text-green-400 text-sm font-medium">Your data is safe</div><div className="text-slate-400 text-xs mt-1">Contracts are analyzed in real-time and never stored. Your data is not retained or used for AI training.</div></div>
               </div>
             </div>
 
-            {/* Email Signup */}
             <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
               <div className="text-sm font-medium text-slate-300 mb-2">Get updates</div>
-              <form 
-                onSubmit={async (e) => {
-                  e.preventDefault();
-                  const email = e.target.email.value;
-                  const btn = e.target.querySelector('button');
-                  btn.disabled = true;
-                  btn.textContent = 'Sending...';
-                  try {
-                    await fetch('https://script.google.com/macros/s/AKfycbxBwD27ii6uhyxC6HZwCHwYjK-aQjiR102hQc9zcnTydlpS-hCZkBAYBR2yFU9smjM/exec', {
-                      method: 'POST',
-                      body: JSON.stringify({ email, source: 'grmc.ai' })
-                    });
-                    e.target.reset();
-                    btn.textContent = '✓ Subscribed!';
-                    setTimeout(() => { btn.textContent = 'Subscribe'; btn.disabled = false; }, 2000);
-                  } catch (err) {
-                    btn.textContent = 'Try again';
-                    btn.disabled = false;
-                  }
-                }}
-                className="flex gap-2"
-              >
-                <input 
-                  type="email" 
-                  name="email" 
-                  placeholder="your@email.com" 
-                  required
-                  className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
-                />
-                <button 
-                  type="submit"
-                  className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-                >
-                  Subscribe
-                </button>
+              <form onSubmit={async (e) => { e.preventDefault(); const email = e.target.email.value; const btn = e.target.querySelector('button'); btn.disabled = true; btn.textContent = 'Sending...'; try { await fetch('https://script.google.com/macros/s/AKfycbxBwD27ii6uhyxC6HZwCHwYjK-aQjiR102hQc9zcnTydlpS-hCZkBAYBR2yFU9smjM/exec', { method: 'POST', body: JSON.stringify({ email, source: 'grmc.ai' }) }); e.target.reset(); btn.textContent = '✓ Subscribed!'; setTimeout(() => { btn.textContent = 'Subscribe'; btn.disabled = false; }, 2000); } catch (err) { btn.textContent = 'Try again'; btn.disabled = false; } }} className="flex gap-2">
+                <input type="email" name="email" placeholder="your@email.com" required className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500" />
+                <button type="submit" className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50">Subscribe</button>
               </form>
             </div>
           </div>
 
-          {/* Right: Results (3 cols) */}
           <div className="lg:col-span-3 space-y-4">
             {allResults.length === 0 ? (
               <div className="bg-slate-800/50 rounded-xl p-8 border border-slate-700/50 text-center h-full flex flex-col items-center justify-center min-h-[400px]">
-                <svg className="w-16 h-16 text-slate-700 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <svg className="w-16 h-16 text-slate-700 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 <div className="text-slate-500 text-lg">Compliance results will appear here</div>
                 <div className="text-slate-600 text-sm mt-2">Upload contracts and click Analyze</div>
               </div>
             ) : (
               <>
-                {/* Results summary */}
                 {allResults.length > 1 && (
                   <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
-                    <div className="text-sm text-slate-400 mb-2">
-                      Analyzed {allResults.length} contracts
-                    </div>
+                    <div className="text-sm text-slate-400 mb-2">Analyzed {allResults.length} contracts</div>
                     <div className="flex gap-4 flex-wrap">
-                      {allResults.filter(r => r.results).length > 0 && (
-                        <span className="text-green-400 text-sm">
-                          ✓ {allResults.filter(r => r.results).length} successful
-                        </span>
-                      )}
-                      {allResults.filter(r => r.error).length > 0 && (
-                        <span className="text-red-400 text-sm">
-                          ✗ {allResults.filter(r => r.error).length} failed
-                        </span>
-                      )}
-                      <span className="text-slate-400 text-sm">
-                        Avg score: {Math.round(
-                          allResults.filter(r => r.results).reduce((sum, r) => sum + r.results.overallScore, 0) /
-                          allResults.filter(r => r.results).length
-                        )}%
-                      </span>
+                      {allResults.filter(r => r.results).length > 0 && <span className="text-green-400 text-sm">✓ {allResults.filter(r => r.results).length} successful</span>}
+                      {allResults.filter(r => r.error).length > 0 && <span className="text-red-400 text-sm">✗ {allResults.filter(r => r.error).length} failed</span>}
+                      <span className="text-slate-400 text-sm">Avg score: {Math.round(allResults.filter(r => r.results).reduce((sum, r) => sum + r.results.overallScore, 0) / allResults.filter(r => r.results).length)}%</span>
                     </div>
                   </div>
                 )}
-                
-                {/* Individual results */}
                 {allResults.map((result, index) => renderResultCard(result, index))}
-
-                {/* Reset */}
-                <button
-                  onClick={reset}
-                  className="w-full py-3 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 font-medium transition-colors"
-                >
-                  Analyze More Contracts
-                </button>
+                <button onClick={reset} className="w-full py-3 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 font-medium transition-colors">Analyze More Contracts</button>
               </>
             )}
           </div>
         </div>
 
-        {/* Who Uses GRMC.ai Section */}
         <section className="mb-16">
           <h2 className="text-3xl font-bold text-center mb-8">Who GRMC.ai is Built For</h2>
           <div className="grid md:grid-cols-3 gap-6">
             <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
               <h3 className="text-xl font-semibold mb-3 text-blue-400">Legal Operations Teams</h3>
-              <p className="text-slate-300 text-sm mb-4">
-                Mid-market to enterprise companies using CLMs for contract storage but lacking a compliance intelligence layer. Manual DPA review takes 2-4 hours per contract - GRMC.ai is designed to reduce that to minutes through automated gap analysis.
-              </p>
-              <ul className="text-slate-400 text-sm space-y-2">
-                <li>• Companies with 100-2000 employees</li>
-                <li>• Already using a CLM </li>
-                <li>• Overwhelmed with vendor contract reviews</li>
-                <li>• Need to scale compliance without hiring</li>
-              </ul>
+              <p className="text-slate-300 text-sm mb-4">Mid-market to enterprise companies using CLMs for contract storage but lacking a compliance intelligence layer. Manual DPA review takes 2-4 hours per contract - GRMC.ai reduces that to minutes through automated gap analysis.</p>
+              <ul className="text-slate-400 text-sm space-y-2"><li>• Companies with 100-2000 employees</li><li>• Already using a CLM</li><li>• Overwhelmed with vendor contract reviews</li><li>• Need to scale compliance without hiring</li></ul>
             </div>
-
             <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
               <h3 className="text-xl font-semibold mb-3 text-purple-400">Compliance Officers</h3>
-              <p className="text-slate-300 text-sm mb-4">
-                Compliance and risk teams preparing for audits need to verify all vendor contracts meet framework requirements. GRMC.ai provides automated verification and audit-ready documentation for SOC 2, GDPR, CCPA, HIPAA, ISO 27001, and SOX compliance.
-              </p>
-              <ul className="text-slate-400 text-sm space-y-2">
-                <li>• Preparing for compliance audits</li>
-                <li>• Managing third-party risk programs</li>
-                <li>• Need audit documentation and evidence</li>
-                <li>• Tracking compliance across vendors</li>
-              </ul>
+              <p className="text-slate-300 text-sm mb-4">Compliance and risk teams preparing for audits need to verify all vendor contracts meet framework requirements. GRMC.ai provides automated verification and audit-ready documentation across all eight frameworks.</p>
+              <ul className="text-slate-400 text-sm space-y-2"><li>• Preparing for compliance audits</li><li>• Managing third-party risk programs</li><li>• Need audit documentation and evidence</li><li>• Tracking compliance across vendors</li></ul>
             </div>
-
             <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
-              <h3 className="text-xl font-semibold mb-3 text-green-400">SaaS Companies</h3>
-              <p className="text-slate-300 text-sm mb-4">
-                Fast-growing SaaS companies subject to GDPR, CCPA, HIPAA, or ISO 27001 requirements need affordable compliance verification without enterprise GRC platform costs. GRMC.ai provides compliance intelligence at startup-friendly pricing.
-              </p>
-              <ul className="text-slate-400 text-sm space-y-2">
-                <li>• 50-500 employees</li>
-                <li>• Subject to GDPR, CCPA, HIPAA, or ISO 27001</li>
-                <li>• Can't afford enterprise GRC platforms</li>
-                <li>• Need to move fast without compliance delays</li>
-              </ul>
+              <h3 className="text-xl font-semibold mb-3 text-green-400">Defense & Government Contractors</h3>
+              <p className="text-slate-300 text-sm mb-4">Companies pursuing federal contracts must demonstrate CMMC certification and NIST 800-171 compliance. GRMC.ai automates gap analysis for CUI protection obligations — critical for DFARS compliance and DoD contract eligibility.</p>
+              <ul className="text-slate-400 text-sm space-y-2"><li>• Pursuing DoD or federal contracts</li><li>• Subject to DFARS/CMMC requirements</li><li>• Need to protect Controlled Unclassified Information</li><li>• Preparing for CMMC Level 2 or 3 assessment</li></ul>
             </div>
           </div>
         </section>
 
-        {/* Supported Compliance Frameworks Section */}
         <section className="mb-16">
           <h2 className="text-3xl font-bold text-center mb-4">Supported Compliance Frameworks</h2>
-          <p className="text-slate-400 text-center mb-8 max-w-2xl mx-auto">
-            GRMC.ai provides automated gap analysis against six major compliance frameworks
-          </p>
-          
+          <p className="text-slate-400 text-center mb-8 max-w-2xl mx-auto">GRMC.ai provides automated gap analysis against eight major compliance frameworks</p>
           <div className="space-y-6">
-            {/* GDPR Article 28 */}
             <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
               <h3 className="text-xl font-semibold mb-3 text-blue-400">GDPR Article 28 (Data Processing Agreements)</h3>
-              <p className="text-slate-300 text-sm mb-4">
-                Analyzes DPAs for compliance with EU data protection requirements:
-              </p>
-              <div className="grid md:grid-cols-2 gap-3 text-slate-400 text-sm">
-                <div>• Data processing obligations and limitations</div>
-                <div>• Security measures and incident response</div>
-                <div>• Sub-processor authorization requirements</div>
-                <div>• Data subject rights assistance</div>
-                <div>• Audit rights and documentation</div>
-                <div>• Data breach notification timelines</div>
-              </div>
+              <p className="text-slate-300 text-sm mb-4">Analyzes DPAs for compliance with EU data protection requirements:</p>
+              <div className="grid md:grid-cols-2 gap-3 text-slate-400 text-sm"><div>• Data processing obligations and limitations</div><div>• Security measures and incident response</div><div>• Sub-processor authorization requirements</div><div>• Data subject rights assistance</div><div>• Audit rights and documentation</div><div>• Data breach notification timelines</div></div>
             </div>
-
-            {/* SOC 2 */}
             <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
               <h3 className="text-xl font-semibold mb-3 text-purple-400">SOC 2 Type I & Type II</h3>
-              <p className="text-slate-300 text-sm mb-4">
-                Verifies vendor contracts include necessary SOC 2 commitments:
-              </p>
-              <div className="grid md:grid-cols-2 gap-3 text-slate-400 text-sm">
-                <div>• Security controls and commitments</div>
-                <div>• Availability and uptime SLAs</div>
-                <div>• Processing integrity requirements</div>
-                <div>• Confidentiality obligations</div>
-                <div>• Incident response procedures</div>
-                <div>• Right to audit provisions</div>
-              </div>
+              <p className="text-slate-300 text-sm mb-4">Verifies vendor contracts include necessary SOC 2 commitments:</p>
+              <div className="grid md:grid-cols-2 gap-3 text-slate-400 text-sm"><div>• Security controls and commitments</div><div>• Availability and uptime SLAs</div><div>• Processing integrity requirements</div><div>• Confidentiality obligations</div><div>• Incident response procedures</div><div>• Right to audit provisions</div></div>
             </div>
-
-            {/* CCPA/CPRA */}
             <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
               <h3 className="text-xl font-semibold mb-3 text-orange-400">CCPA/CPRA (California Privacy)</h3>
-              <p className="text-slate-300 text-sm mb-4">
-                Checks for California privacy law compliance:
-              </p>
-              <div className="grid md:grid-cols-2 gap-3 text-slate-400 text-sm">
-                <div>• Service provider vs. contractor designation</div>
-                <div>• Data sale prohibitions</div>
-                <div>• Consumer rights support obligations</div>
-                <div>• Data retention and deletion requirements</div>
-                <div>• Privacy notice requirements</div>
-                <div>• Third-party disclosure restrictions</div>
-              </div>
+              <p className="text-slate-300 text-sm mb-4">Checks for California privacy law compliance:</p>
+              <div className="grid md:grid-cols-2 gap-3 text-slate-400 text-sm"><div>• Service provider vs. contractor designation</div><div>• Data sale prohibitions</div><div>• Consumer rights support obligations</div><div>• Data retention and deletion requirements</div><div>• Privacy notice requirements</div><div>• Third-party disclosure restrictions</div></div>
             </div>
-
-            {/* HIPAA */}
             <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
               <h3 className="text-xl font-semibold mb-3 text-pink-400">HIPAA (Business Associate Agreements)</h3>
-              <p className="text-slate-300 text-sm mb-4">
-                Validates BAAs contain required HIPAA provisions:
-              </p>
-              <div className="grid md:grid-cols-2 gap-3 text-slate-400 text-sm">
-                <div>• Permitted uses and disclosures</div>
-                <div>• Safeguard requirements</div>
-                <div>• Breach notification obligations</div>
-                <div>• Subcontractor requirements</div>
-                <div>• Return or destruction of PHI</div>
-                <div>• Availability of books and records</div>
-              </div>
+              <p className="text-slate-300 text-sm mb-4">Validates BAAs contain required HIPAA provisions:</p>
+              <div className="grid md:grid-cols-2 gap-3 text-slate-400 text-sm"><div>• Permitted uses and disclosures</div><div>• Safeguard requirements</div><div>• Breach notification obligations</div><div>• Subcontractor requirements</div><div>• Return or destruction of PHI</div><div>• Availability of books and records</div></div>
             </div>
-
-            {/* ISO 27001 */}
             <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
               <h3 className="text-xl font-semibold mb-3 text-teal-400">ISO 27001 (Information Security Management)</h3>
-              <p className="text-slate-300 text-sm mb-4">
-                Verifies contracts reflect ISO 27001 Annex A control obligations:
-              </p>
-              <div className="grid md:grid-cols-2 gap-3 text-slate-400 text-sm">
-                <div>• Information security policy obligations</div>
-                <div>• Access control and least privilege</div>
-                <div>• Cryptography and encryption standards</div>
-                <div>• Supplier security flow-down requirements</div>
-                <div>• Incident management and response</div>
-                <div>• ISO 27001 certification requirement</div>
-              </div>
+              <p className="text-slate-300 text-sm mb-4">Verifies contracts reflect ISO 27001 Annex A control obligations:</p>
+              <div className="grid md:grid-cols-2 gap-3 text-slate-400 text-sm"><div>• Information security policy obligations</div><div>• Access control and least privilege</div><div>• Cryptography and encryption standards</div><div>• Supplier security flow-down requirements</div><div>• Incident management and response</div><div>• ISO 27001 certification requirement</div></div>
             </div>
-
-            {/* SOX */}
             <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
               <h3 className="text-xl font-semibold mb-3 text-yellow-400">SOX (Sarbanes-Oxley Act)</h3>
-              <p className="text-slate-300 text-sm mb-4">
-                Checks vendor contracts for financial control obligations under SOX Sections 302 and 404:
-              </p>
-              <div className="grid md:grid-cols-2 gap-3 text-slate-400 text-sm">
-                <div>• Internal controls over financial reporting</div>
-                <div>• Audit trail and logging requirements</div>
-                <div>• Segregation of duties obligations</div>
-                <div>• 7-year financial record retention</div>
-                <div>• IT general controls (ITGC)</div>
-                <div>• Right to audit financial controls</div>
-              </div>
+              <p className="text-slate-300 text-sm mb-4">Checks vendor contracts for financial control obligations under SOX Sections 302 and 404:</p>
+              <div className="grid md:grid-cols-2 gap-3 text-slate-400 text-sm"><div>• Internal controls over financial reporting</div><div>• Audit trail and logging requirements</div><div>• Segregation of duties obligations</div><div>• 7-year financial record retention</div><div>• IT general controls (ITGC)</div><div>• Right to audit financial controls</div></div>
+            </div>
+            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+              <h3 className="text-xl font-semibold mb-3 text-red-400">CMMC (Cybersecurity Maturity Model Certification)</h3>
+              <p className="text-slate-300 text-sm mb-4">Verifies contracts include required CMMC obligations for defense and federal contractors:</p>
+              <div className="grid md:grid-cols-2 gap-3 text-slate-400 text-sm"><div>• CMMC level requirement (Level 1, 2, or 3)</div><div>• FCI and CUI protection obligations</div><div>• Incident reporting to US-CERT (72 hours)</div><div>• Subcontractor flow-down requirements</div><div>• Access control and MFA requirements</div><div>• Right to audit CMMC compliance</div></div>
+            </div>
+            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+              <h3 className="text-xl font-semibold mb-3 text-indigo-400">NIST SP 800-171 (Protecting CUI)</h3>
+              <p className="text-slate-300 text-sm mb-4">Analyzes contracts for Controlled Unclassified Information protection requirements:</p>
+              <div className="grid md:grid-cols-2 gap-3 text-slate-400 text-sm"><div>• Explicit NIST 800-171 reference or CUI obligations</div><div>• Access control and least privilege (3.1)</div><div>• Audit and accountability requirements (3.3)</div><div>• Incident response plan obligations (3.6)</div><div>• System Security Plan (SSP) requirement</div><div>• Subcontractor flow-down for CUI handling</div></div>
             </div>
           </div>
         </section>
 
-        {/* Why Trust Us Section */}
         <section className="mb-16 bg-slate-800/50 rounded-xl p-8 border border-slate-700/50">
           <h2 className="text-3xl font-bold text-center mb-4">Built by Legal Ops Experts</h2>
-          <p className="text-slate-300 text-center max-w-3xl mx-auto mb-6">
-            GRMC.ai was created by <strong>20-year legal tech career veterans</strong> who spent their careers implementing enterprise CLM systems and managing global legal operations teams.
-          </p>
-          <p className="text-slate-400 text-center max-w-3xl mx-auto mb-6">
-            We built GRMC.ai because we lived the pain: CLM vendors claim "AI capabilities" but deliver data extraction, not compliance intelligence. Legal ops teams still do manual gap analysis.
-          </p>
-          <p className="text-blue-400 text-center font-medium">
-            We built the tool we wished existed.
-          </p>
+          <p className="text-slate-300 text-center max-w-3xl mx-auto mb-6">GRMC.ai was created by <strong>20-year legal tech career veterans</strong> who spent their careers implementing enterprise CLM systems and managing global legal operations teams.</p>
+          <p className="text-slate-400 text-center max-w-3xl mx-auto mb-6">We built GRMC.ai because we lived the pain: CLM vendors claim "AI capabilities" but deliver data extraction, not compliance intelligence. Legal ops teams still do manual gap analysis.</p>
+          <p className="text-blue-400 text-center font-medium">We built the tool we wished existed.</p>
         </section>
 
-        {/* Footer */}
         <footer className="mt-16 pt-8 border-t border-slate-800 text-center text-slate-500 text-sm">
           <p>GRMC.ai™ — Governance, Risk Management & Compliance</p>
           <p className="mt-1">AI-powered contract compliance analysis</p>
