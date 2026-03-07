@@ -29,6 +29,8 @@ export default function Post7() {
     document.title = "The $200,000 Compliance Myth | GRMC.ai";
     const meta = document.querySelector('meta[name="description"]');
     if (meta) meta.setAttribute("content", "SOC 2, GDPR, HIPAA, and CCPA compliance consulting can cost SMBs $200,000+ per year. We break down the real numbers — and the alternative.");
+    // Remove any stale ld+json scripts injected by other pages
+    document.head.querySelectorAll('script[type="application/ld+json"]').forEach(el => el.parentNode.removeChild(el));
     if (!document.getElementById("post7-fonts")) {
       const fontLink = document.createElement("link");
       fontLink.id = "post7-fonts";
