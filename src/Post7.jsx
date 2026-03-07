@@ -1,14 +1,34 @@
 import { useEffect } from "react";
 
+const ARTICLE_SCHEMA = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "The $200,000 Compliance Myth: Why SMBs Are Overpaying for Compliance",
+  "description": "A data-backed breakdown of what SOC 2, GDPR, HIPAA, and CCPA compliance actually costs with traditional consulting.",
+  "author": { "@type": "Organization", "name": "GRMC.ai", "url": "https://grmc.ai" },
+  "publisher": { "@type": "Organization", "name": "GRMC.ai", "url": "https://grmc.ai" },
+  "datePublished": "2026-03-06",
+  "dateModified": "2026-03-06",
+  "url": "https://grmc.ai/blog/compliance-consulting-cost-myth"
+};
+
+const FAQ_SCHEMA = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "How much does SOC 2 compliance cost for SMBs?", "acceptedAnswer": { "@type": "Answer", "text": "For most small-to-midsize companies, all-in SOC 2 compliance costs typically land in the $30,000–$50,000 range. Companies using traditional consulting firms can spend $50,000–$100,000+ on preparation alone, before auditor fees." }},
+    { "@type": "Question", "name": "How much does GDPR compliance cost?", "acceptedAnswer": { "@type": "Answer", "text": "GDPR Data Processing Impact Assessments (DPIAs) cost $5,000–$15,000 each, and most organizations need 3–8 DPIAs during initial implementation. Year one GDPR implementation routinely exceeds $100,000." }},
+    { "@type": "Question", "name": "What is the total cost of multi-framework compliance (SOC 2 + GDPR + HIPAA + CCPA)?", "acceptedAnswer": { "@type": "Answer", "text": "A mid-market SMB managing all four frameworks with traditional consulting can spend $170,000–$415,000+ per year." }},
+    { "@type": "Question", "name": "Is there a cheaper alternative to compliance consulting for SMBs?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. AI-powered platforms like GRMC.ai provide instant gap analysis across GDPR, SOC 2, HIPAA, and CCPA for $9,999/year." }}
+  ]
+};
+
 export default function Post7() {
   useEffect(() => {
     window.scrollTo(0, 0);
     document.title = "The $200,000 Compliance Myth | GRMC.ai";
-
     const meta = document.querySelector('meta[name="description"]');
     if (meta) meta.setAttribute("content", "SOC 2, GDPR, HIPAA, and CCPA compliance consulting can cost SMBs $200,000+ per year. We break down the real numbers — and the alternative.");
-
-    // Inject Google Fonts (deduplicated)
     if (!document.getElementById("post7-fonts")) {
       const fontLink = document.createElement("link");
       fontLink.id = "post7-fonts";
@@ -16,49 +36,9 @@ export default function Post7() {
       fontLink.href = "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap";
       document.head.appendChild(fontLink);
     }
-
-    // Inject Article schema (deduplicated)
-    if (!document.getElementById("post7-schema-article")) {
-      const schema1 = document.createElement("script");
-      schema1.id = "post7-schema-article";
-      schema1.type = "application/ld+json";
-      schema1.text = JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "Article",
-        "headline": "The $200,000 Compliance Myth: Why SMBs Are Overpaying for Compliance",
-        "description": "A data-backed breakdown of what SOC 2, GDPR, HIPAA, and CCPA compliance actually costs with traditional consulting.",
-        "author": { "@type": "Organization", "name": "GRMC.ai", "url": "https://grmc.ai" },
-        "publisher": { "@type": "Organization", "name": "GRMC.ai", "url": "https://grmc.ai" },
-        "datePublished": "2026-03-06",
-        "dateModified": "2026-03-06",
-        "url": "https://grmc.ai/blog/compliance-consulting-cost-myth",
-      });
-      document.head.appendChild(schema1);
-    }
-
-    // Inject FAQPage schema (deduplicated)
-    if (!document.getElementById("post7-schema-faq")) {
-      const schema2 = document.createElement("script");
-      schema2.id = "post7-schema-faq";
-      schema2.type = "application/ld+json";
-      schema2.text = JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        "mainEntity": [
-          { "@type": "Question", "name": "How much does SOC 2 compliance cost for SMBs?", "acceptedAnswer": { "@type": "Answer", "text": "For most small-to-midsize companies, all-in SOC 2 compliance costs typically land in the $30,000–$50,000 range. Companies using traditional consulting firms can spend $50,000–$100,000+ on preparation alone, before auditor fees." }},
-          { "@type": "Question", "name": "How much does GDPR compliance cost?", "acceptedAnswer": { "@type": "Answer", "text": "GDPR Data Processing Impact Assessments (DPIAs) cost $5,000–$15,000 each, and most organizations need 3–8 DPIAs during initial implementation. Year one GDPR implementation routinely exceeds $100,000." }},
-          { "@type": "Question", "name": "What is the total cost of multi-framework compliance (SOC 2 + GDPR + HIPAA + CCPA)?", "acceptedAnswer": { "@type": "Answer", "text": "A mid-market SMB managing all four frameworks with traditional consulting can spend $170,000–$415,000+ per year." }},
-          { "@type": "Question", "name": "Is there a cheaper alternative to compliance consulting for SMBs?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. AI-powered platforms like GRMC.ai provide instant gap analysis across GDPR, SOC 2, HIPAA, and CCPA for $2,999/year." }},
-        ]
-      });
-      document.head.appendChild(schema2);
-    }
-
     return () => {
-      ["post7-fonts", "post7-schema-article", "post7-schema-faq"].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.parentNode.removeChild(el);
-      });
+      const el = document.getElementById("post7-fonts");
+      if (el) el.parentNode.removeChild(el);
     };
   }, []);
 
@@ -391,7 +371,7 @@ export default function Post7() {
   };
 
   const tableRows = [
-    ["SOC 2 (Type II)", "$30,000 – $100,000+", "$2,999 / year", false],
+    ["SOC 2 (Type II)", "$30,000 – $100,000+", "$9,999 / year", false],
     ["GDPR (full implementation)", "$50,000 – $120,000+", "Included", true],
     ["CCPA", "$15,000 – $40,000", "Included", false],
     ["HIPAA", "$25,000 – $80,000", "Included", true],
@@ -400,6 +380,8 @@ export default function Post7() {
 
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ARTICLE_SCHEMA) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_SCHEMA) }} />
       <article style={styles.page}>
         <header style={styles.hero}>
           <div style={styles.kicker}>Research Report &nbsp;·&nbsp; March 2026</div>
@@ -502,7 +484,7 @@ export default function Post7() {
                 <tr style={{ background: "#1a1208", color: "white" }}>
                   <td style={{ ...styles.tdBase, borderBottom: "none", fontWeight: 700 }}>TOTAL (all 4 frameworks)</td>
                   <td style={{ ...styles.tdBase, borderBottom: "none", color: "#e74c3c", fontWeight: 700 }}>$170,000 – $415,000+</td>
-                  <td style={{ ...styles.tdBase, borderBottom: "none", color: "#27ae60", fontWeight: 700 }}>$2,999</td>
+                  <td style={{ ...styles.tdBase, borderBottom: "none", color: "#27ae60", fontWeight: 700 }}>$9,999</td>
                 </tr>
               </tbody>
               <tfoot>
@@ -536,7 +518,7 @@ export default function Post7() {
             </div>
             <div style={styles.compColGood}>
               <div style={styles.compLabelGood}>GRMC.ai</div>
-              <div style={styles.compPriceGood}>$2,999</div>
+              <div style={styles.compPriceGood}>$9,999</div>
               <p style={styles.compSubtitle}>per year, all frameworks included</p>
               <ul style={styles.compList}>
                 {["Gap analysis in minutes", "GDPR, SOC 2, HIPAA, CCPA in one platform", "AI-generated remediation roadmap", "Continuous monitoring, not point-in-time", "Zero internal FTE diversion"].map(item => (
