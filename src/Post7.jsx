@@ -8,47 +8,57 @@ export default function Post7() {
     const meta = document.querySelector('meta[name="description"]');
     if (meta) meta.setAttribute("content", "SOC 2, GDPR, HIPAA, and CCPA compliance consulting can cost SMBs $200,000+ per year. We break down the real numbers — and the alternative.");
 
-    // Inject Google Fonts
-    const fontLink = document.createElement("link");
-    fontLink.rel = "stylesheet";
-    fontLink.href = "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap";
-    document.head.appendChild(fontLink);
+    // Inject Google Fonts (deduplicated)
+    if (!document.getElementById("post7-fonts")) {
+      const fontLink = document.createElement("link");
+      fontLink.id = "post7-fonts";
+      fontLink.rel = "stylesheet";
+      fontLink.href = "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap";
+      document.head.appendChild(fontLink);
+    }
 
-    // Inject Article schema
-    const schema1 = document.createElement("script");
-    schema1.type = "application/ld+json";
-    schema1.text = JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "Article",
-      "headline": "The $200,000 Compliance Myth: Why SMBs Are Overpaying for Compliance",
-      "description": "A data-backed breakdown of what SOC 2, GDPR, HIPAA, and CCPA compliance actually costs with traditional consulting.",
-      "author": { "@type": "Organization", "name": "GRMC.ai", "url": "https://grmc.ai" },
-      "publisher": { "@type": "Organization", "name": "GRMC.ai", "url": "https://grmc.ai" },
-      "datePublished": "2026-03-06",
-      "dateModified": "2026-03-06",
-      "url": "https://grmc.ai/blog/compliance-consulting-cost-myth",
-    });
-    document.head.appendChild(schema1);
+    // Inject Article schema (deduplicated)
+    if (!document.getElementById("post7-schema-article")) {
+      const schema1 = document.createElement("script");
+      schema1.id = "post7-schema-article";
+      schema1.type = "application/ld+json";
+      schema1.text = JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "The $200,000 Compliance Myth: Why SMBs Are Overpaying for Compliance",
+        "description": "A data-backed breakdown of what SOC 2, GDPR, HIPAA, and CCPA compliance actually costs with traditional consulting.",
+        "author": { "@type": "Organization", "name": "GRMC.ai", "url": "https://grmc.ai" },
+        "publisher": { "@type": "Organization", "name": "GRMC.ai", "url": "https://grmc.ai" },
+        "datePublished": "2026-03-06",
+        "dateModified": "2026-03-06",
+        "url": "https://grmc.ai/blog/compliance-consulting-cost-myth",
+      });
+      document.head.appendChild(schema1);
+    }
 
-    // Inject FAQPage schema
-    const schema2 = document.createElement("script");
-    schema2.type = "application/ld+json";
-    schema2.text = JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      "mainEntity": [
-        { "@type": "Question", "name": "How much does SOC 2 compliance cost for SMBs?", "acceptedAnswer": { "@type": "Answer", "text": "For most small-to-midsize companies, all-in SOC 2 compliance costs typically land in the $30,000–$50,000 range. Companies using traditional consulting firms can spend $50,000–$100,000+ on preparation alone, before auditor fees." }},
-        { "@type": "Question", "name": "How much does GDPR compliance cost?", "acceptedAnswer": { "@type": "Answer", "text": "GDPR Data Processing Impact Assessments (DPIAs) cost $5,000–$15,000 each, and most organizations need 3–8 DPIAs during initial implementation. Year one GDPR implementation routinely exceeds $100,000." }},
-        { "@type": "Question", "name": "What is the total cost of multi-framework compliance (SOC 2 + GDPR + HIPAA + CCPA)?", "acceptedAnswer": { "@type": "Answer", "text": "A mid-market SMB managing all four frameworks with traditional consulting can spend $170,000–$415,000+ per year." }},
-        { "@type": "Question", "name": "Is there a cheaper alternative to compliance consulting for SMBs?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. AI-powered platforms like GRMC.ai provide instant gap analysis across GDPR, SOC 2, HIPAA, and CCPA for $2,999/year." }},
-      ]
-    });
-    document.head.appendChild(schema2);
+    // Inject FAQPage schema (deduplicated)
+    if (!document.getElementById("post7-schema-faq")) {
+      const schema2 = document.createElement("script");
+      schema2.id = "post7-schema-faq";
+      schema2.type = "application/ld+json";
+      schema2.text = JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "How much does SOC 2 compliance cost for SMBs?", "acceptedAnswer": { "@type": "Answer", "text": "For most small-to-midsize companies, all-in SOC 2 compliance costs typically land in the $30,000–$50,000 range. Companies using traditional consulting firms can spend $50,000–$100,000+ on preparation alone, before auditor fees." }},
+          { "@type": "Question", "name": "How much does GDPR compliance cost?", "acceptedAnswer": { "@type": "Answer", "text": "GDPR Data Processing Impact Assessments (DPIAs) cost $5,000–$15,000 each, and most organizations need 3–8 DPIAs during initial implementation. Year one GDPR implementation routinely exceeds $100,000." }},
+          { "@type": "Question", "name": "What is the total cost of multi-framework compliance (SOC 2 + GDPR + HIPAA + CCPA)?", "acceptedAnswer": { "@type": "Answer", "text": "A mid-market SMB managing all four frameworks with traditional consulting can spend $170,000–$415,000+ per year." }},
+          { "@type": "Question", "name": "Is there a cheaper alternative to compliance consulting for SMBs?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. AI-powered platforms like GRMC.ai provide instant gap analysis across GDPR, SOC 2, HIPAA, and CCPA for $2,999/year." }},
+        ]
+      });
+      document.head.appendChild(schema2);
+    }
 
     return () => {
-      document.head.removeChild(fontLink);
-      document.head.removeChild(schema1);
-      document.head.removeChild(schema2);
+      ["post7-fonts", "post7-schema-article", "post7-schema-faq"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.parentNode.removeChild(el);
+      });
     };
   }, []);
 
@@ -391,7 +401,6 @@ export default function Post7() {
   return (
     <>
       <article style={styles.page}>
-        {/* Hero */}
         <header style={styles.hero}>
           <div style={styles.kicker}>Research Report &nbsp;·&nbsp; March 2026</div>
           <h1 style={styles.h1}>
@@ -408,13 +417,11 @@ export default function Post7() {
           </div>
         </header>
 
-        {/* Body */}
         <div style={styles.body}>
           <p style={styles.p}>Every year, thousands of small and mid-sized businesses race toward compliance certifications — GDPR, SOC 2, HIPAA, CCPA — driven by enterprise customer demands, investor requirements, or regulatory deadlines. And almost every one of them gets the same advice: <strong>hire a consultant.</strong></p>
           <p style={styles.p}>That advice costs them a fortune. Not because consultants lack value — many are genuinely expert — but because the traditional consulting model was built for enterprises with unlimited budgets. When SMBs apply it, they spend six figures solving problems that should cost thousands.</p>
           <p style={styles.p}>This article breaks down exactly how the $200,000 number is reached, myth by myth, with sourced data from compliance industry research published in 2024–2026.</p>
 
-          {/* Myth 1 */}
           <div style={styles.mythSection} id="myth-1">
             <span style={styles.mythLabel}>Myth #1</span>
             <div style={styles.mythClaim}>"Compliance is a one-time investment."</div>
@@ -434,7 +441,6 @@ export default function Post7() {
             </div>
           </div>
 
-          {/* Myth 2 */}
           <div style={styles.mythSection} id="myth-2">
             <span style={styles.mythLabel}>Myth #2</span>
             <div style={styles.mythClaim}>"The audit fee is the biggest cost."</div>
@@ -454,7 +460,6 @@ export default function Post7() {
             </div>
           </div>
 
-          {/* Myth 3 */}
           <div style={styles.mythSection} id="myth-3">
             <span style={styles.mythLabel}>Myth #3</span>
             <div style={styles.mythClaim}>"GDPR is just a legal project."</div>
@@ -470,7 +475,6 @@ export default function Post7() {
             </div>
           </div>
 
-          {/* Myth 4 */}
           <div style={styles.mythSection} id="myth-4">
             <span style={styles.mythLabel}>Myth #4</span>
             <div style={styles.mythClaim}>"We only need one framework."</div>
@@ -478,7 +482,6 @@ export default function Post7() {
             <p style={{ ...styles.p, marginBottom: "0.5rem" }}>Here is what that actually costs with traditional consulting:</p>
           </div>
 
-          {/* Table */}
           <div style={styles.tableWrapper}>
             <table style={styles.table}>
               <thead style={styles.thead}>
@@ -515,13 +518,11 @@ export default function Post7() {
             <p style={styles.verdictP}>A mid-market SMB managing all four major compliance frameworks with traditional consulting can easily spend $200,000–$400,000 per year. Not as a one-time project. Every single year. This is not an edge case — it is the standard outcome for companies that follow legacy compliance advice.</p>
           </div>
 
-          {/* Alternative */}
           <h2 style={styles.h2} id="alternative">The Alternative: Compliance Intelligence, Not Compliance Theater</h2>
           <p style={styles.p}>The compliance industry has built a highly profitable business on complexity. Gap analyses that take months. Remediation engagements that stretch into six figures. Annual re-certification cycles that lock companies into the same consulting relationship indefinitely.</p>
           <p style={styles.p}>GRMC.ai was built on a different premise: the gap analysis — the single most expensive and time-consuming part of any compliance engagement — should take minutes, not months.</p>
           <p style={styles.p}>Upload your contracts. Select your frameworks. Get an instant, AI-powered gap analysis against GDPR, SOC 2, HIPAA, and CCPA simultaneously. Know exactly where you stand, what needs fixing, and what evidence you already have — before you spend a dollar on a consultant.</p>
 
-          {/* Comparison */}
           <div style={styles.compGrid}>
             <div style={styles.compColBad}>
               <div style={styles.compLabelBad}>Traditional Consulting</div>
@@ -547,14 +548,12 @@ export default function Post7() {
 
           <p style={styles.p}>CLM platforms extract contract data. That is not the same as compliance intelligence. GRMC.ai analyzes what your contracts say against what GDPR, SOC 2, HIPAA, and CCPA actually require — and surfaces the gaps your CLM cannot see.</p>
 
-          {/* CTA */}
           <div style={styles.ctaBlock}>
             <h2 style={styles.ctaH2}>Stop Paying $200,000 for Compliance Theater</h2>
             <p style={styles.ctaP}>Start your 30-day free trial. No consulting fees. No surprise invoices. No six-month timelines.</p>
             <a href="https://grmc.ai/#trial" style={styles.ctaBtn}>Start Free Trial at grmc.ai</a>
           </div>
 
-          {/* Sources */}
           <div style={styles.sources}>
             <h3 style={styles.sourcesH3}>Sources Cited</h3>
             <ol style={styles.sourcesList}>
