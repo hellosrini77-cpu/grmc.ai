@@ -6,7 +6,7 @@ const anthropic = new Anthropic({
 
 const COMBINED_PROMPT = `You are a legal compliance expert specializing in data privacy, security, and financial regulations.
 
-Analyze the following contract text and evaluate its compliance with ALL EIGHT frameworks:
+Analyze the following contract text and evaluate its compliance with ALL TEN frameworks:
 1. GDPR Article 28 (Data Processing Agreement requirements)
 2. SOC 2 (Vendor security requirements)
 3. CCPA/CPRA (California Consumer Privacy Act)
@@ -15,6 +15,8 @@ Analyze the following contract text and evaluate its compliance with ALL EIGHT f
 6. SOX (Sarbanes-Oxley Act - if applicable to financial controls)
 7. CMMC (Cybersecurity Maturity Model Certification - if applicable to defense/federal contracts)
 8. NIST 800-171 (Protecting Controlled Unclassified Information - if applicable)
+9. PCI DSS (Payment Card Industry Data Security Standard - if applicable)
+10. FedRAMP (Federal Risk and Authorization Management Program - if applicable)
 
 **GDPR Article 28 Requirements:**
 - Processing scope and purpose clearly defined
@@ -133,6 +135,45 @@ Analyze the following contract text and evaluate its compliance with ALL EIGHT f
 - Plan of Action and Milestones (POA&M) requirement
 - Flow-down of NIST 800-171 to subcontractors handling CUI
 
+**PCI DSS (Payment Card Industry Data Security Standard) Contract Requirements:**
+- Explicit reference to PCI DSS compliance obligations
+- Cardholder data protection requirements (encryption, masking)
+- Prohibition on storing sensitive authentication data (CVV, full track data)
+- Access controls for cardholder data environment (CDE)
+- Network segmentation of CDE from other systems
+- Vulnerability management and patch obligations
+- Security monitoring and logging (Requirement 10)
+- Annual PCI DSS assessment or self-assessment questionnaire (SAQ) requirement
+- Penetration testing obligations
+- Incident response plan for cardholder data breaches
+- Immediate notification of suspected or confirmed cardholder data breach
+- Flow-down of PCI DSS to subcontractors handling cardholder data
+- Right to audit PCI DSS compliance
+- Qualified Security Assessor (QSA) or internal security assessor requirement
+- Tokenization or point-to-point encryption (P2PE) requirements where applicable
+- Physical security of systems storing cardholder data
+- Data retention and secure deletion of cardholder data
+
+**FedRAMP (Federal Risk and Authorization Management Program) Contract Requirements:**
+- Explicit reference to FedRAMP authorization requirement (Tailored, Low, Moderate, or High)
+- FedRAMP Authorization to Operate (ATO) or Provisional ATO (P-ATO) referenced
+- NIST SP 800-53 control implementation obligations
+- Continuous monitoring program requirements (ConMon)
+- Monthly vulnerability scanning obligations
+- Annual penetration testing requirement
+- Incident reporting to US-CERT within 1 hour for major incidents
+- Plan of Action and Milestones (POA&M) maintenance
+- System Security Plan (SSP) maintenance and updates
+- Federal data sovereignty and data residency requirements (US soil)
+- Right to audit FedRAMP compliance by agency or third-party assessor (3PAO)
+- Supply chain risk management obligations
+- Personnel security and background check requirements
+- Encryption of federal data at rest and in transit (FIPS 140-2/3 validated)
+- Multi-factor authentication for all privileged and non-privileged accounts
+- Configuration management and change control (CM plan)
+- Contingency planning and disaster recovery (FIPS-compliant backups)
+- Flow-down of FedRAMP requirements to subcontractors and CSPs
+
 For each gap identified, you must:
 1. Extract the CURRENT clause text verbatim from the contract. If no clause exists on that topic, set currentClause to "None found."
 2. Draft a REPLACEMENT clause in formal legal drafting style suitable for a professional DPA, MSA, BAA, or vendor agreement. The replacement must be complete, standalone, and ready to insert into the contract without further editing.
@@ -143,125 +184,72 @@ Respond with a JSON object (no markdown, just pure JSON):
   "gdpr": {
     "score": <number 0-100>,
     "applicable": <true/false based on whether contract involves EU data>,
-    "checklist": [
-      {"requirement": "<requirement>", "present": <true/false>, "note": "<brief note>"}
-    ],
-    "gaps": [
-      {
-        "issue": "<missing or deficient element>",
-        "currentClause": "<verbatim current clause text, or 'None found.' if absent>",
-        "replacementClause": "<complete, formal legal drafting style replacement clause, ready to insert into the contract>"
-      }
-    ]
+    "checklist": [{"requirement": "<requirement>", "present": <true/false>, "note": "<brief note>"}],
+    "gaps": [{"issue": "<missing or deficient element>", "currentClause": "<verbatim current clause text, or 'None found.' if absent>", "replacementClause": "<complete, formal legal drafting style replacement clause, ready to insert into the contract>"}]
   },
   "soc2": {
     "score": <number 0-100>,
     "applicable": true,
-    "checklist": [
-      {"requirement": "<requirement>", "present": <true/false>, "note": "<brief note>"}
-    ],
-    "gaps": [
-      {
-        "issue": "<missing or deficient element>",
-        "currentClause": "<verbatim current clause text, or 'None found.' if absent>",
-        "replacementClause": "<complete, formal legal drafting style replacement clause, ready to insert into the contract>"
-      }
-    ]
+    "checklist": [{"requirement": "<requirement>", "present": <true/false>, "note": "<brief note>"}],
+    "gaps": [{"issue": "<missing or deficient element>", "currentClause": "<verbatim current clause text, or 'None found.' if absent>", "replacementClause": "<complete, formal legal drafting style replacement clause, ready to insert into the contract>"}]
   },
   "ccpa": {
     "score": <number 0-100>,
     "applicable": <true/false based on whether contract involves California consumers>,
-    "checklist": [
-      {"requirement": "<requirement>", "present": <true/false>, "note": "<brief note>"}
-    ],
-    "gaps": [
-      {
-        "issue": "<missing or deficient element>",
-        "currentClause": "<verbatim current clause text, or 'None found.' if absent>",
-        "replacementClause": "<complete, formal legal drafting style replacement clause, ready to insert into the contract>"
-      }
-    ]
+    "checklist": [{"requirement": "<requirement>", "present": <true/false>, "note": "<brief note>"}],
+    "gaps": [{"issue": "<missing or deficient element>", "currentClause": "<verbatim current clause text, or 'None found.' if absent>", "replacementClause": "<complete, formal legal drafting style replacement clause, ready to insert into the contract>"}]
   },
   "hipaa": {
     "score": <number 0-100>,
     "applicable": <true/false based on whether contract involves PHI/healthcare>,
-    "checklist": [
-      {"requirement": "<requirement>", "present": <true/false>, "note": "<brief note>"}
-    ],
-    "gaps": [
-      {
-        "issue": "<missing or deficient element>",
-        "currentClause": "<verbatim current clause text, or 'None found.' if absent>",
-        "replacementClause": "<complete, formal legal drafting style replacement clause, ready to insert into the contract>"
-      }
-    ]
+    "checklist": [{"requirement": "<requirement>", "present": <true/false>, "note": "<brief note>"}],
+    "gaps": [{"issue": "<missing or deficient element>", "currentClause": "<verbatim current clause text, or 'None found.' if absent>", "replacementClause": "<complete, formal legal drafting style replacement clause, ready to insert into the contract>"}]
   },
   "iso27001": {
     "score": <number 0-100>,
     "applicable": <true/false based on whether contract involves information security obligations>,
-    "checklist": [
-      {"requirement": "<requirement>", "present": <true/false>, "note": "<brief note>"}
-    ],
-    "gaps": [
-      {
-        "issue": "<missing or deficient element>",
-        "currentClause": "<verbatim current clause text, or 'None found.' if absent>",
-        "replacementClause": "<complete, formal legal drafting style replacement clause, ready to insert into the contract>"
-      }
-    ]
+    "checklist": [{"requirement": "<requirement>", "present": <true/false>, "note": "<brief note>"}],
+    "gaps": [{"issue": "<missing or deficient element>", "currentClause": "<verbatim current clause text, or 'None found.' if absent>", "replacementClause": "<complete, formal legal drafting style replacement clause, ready to insert into the contract>"}]
   },
   "sox": {
     "score": <number 0-100>,
     "applicable": <true/false based on whether contract involves financial systems or reporting>,
-    "checklist": [
-      {"requirement": "<requirement>", "present": <true/false>, "note": "<brief note>"}
-    ],
-    "gaps": [
-      {
-        "issue": "<missing or deficient element>",
-        "currentClause": "<verbatim current clause text, or 'None found.' if absent>",
-        "replacementClause": "<complete, formal legal drafting style replacement clause, ready to insert into the contract>"
-      }
-    ]
+    "checklist": [{"requirement": "<requirement>", "present": <true/false>, "note": "<brief note>"}],
+    "gaps": [{"issue": "<missing or deficient element>", "currentClause": "<verbatim current clause text, or 'None found.' if absent>", "replacementClause": "<complete, formal legal drafting style replacement clause, ready to insert into the contract>"}]
   },
   "cmmc": {
     "score": <number 0-100>,
     "applicable": <true/false based on whether contract involves federal/defense work or CUI/FCI>,
-    "checklist": [
-      {"requirement": "<requirement>", "present": <true/false>, "note": "<brief note>"}
-    ],
-    "gaps": [
-      {
-        "issue": "<missing or deficient element>",
-        "currentClause": "<verbatim current clause text, or 'None found.' if absent>",
-        "replacementClause": "<complete, formal legal drafting style replacement clause, ready to insert into the contract>"
-      }
-    ]
+    "checklist": [{"requirement": "<requirement>", "present": <true/false>, "note": "<brief note>"}],
+    "gaps": [{"issue": "<missing or deficient element>", "currentClause": "<verbatim current clause text, or 'None found.' if absent>", "replacementClause": "<complete, formal legal drafting style replacement clause, ready to insert into the contract>"}]
   },
   "nist171": {
     "score": <number 0-100>,
     "applicable": <true/false based on whether contract involves CUI or federal information systems>,
-    "checklist": [
-      {"requirement": "<requirement>", "present": <true/false>, "note": "<brief note>"}
-    ],
-    "gaps": [
-      {
-        "issue": "<missing or deficient element>",
-        "currentClause": "<verbatim current clause text, or 'None found.' if absent>",
-        "replacementClause": "<complete, formal legal drafting style replacement clause, ready to insert into the contract>"
-      }
-    ]
+    "checklist": [{"requirement": "<requirement>", "present": <true/false>, "note": "<brief note>"}],
+    "gaps": [{"issue": "<missing or deficient element>", "currentClause": "<verbatim current clause text, or 'None found.' if absent>", "replacementClause": "<complete, formal legal drafting style replacement clause, ready to insert into the contract>"}]
+  },
+  "pcidss": {
+    "score": <number 0-100>,
+    "applicable": <true/false based on whether contract involves payment card data or cardholder data environment>,
+    "checklist": [{"requirement": "<requirement>", "present": <true/false>, "note": "<brief note>"}],
+    "gaps": [{"issue": "<missing or deficient element>", "currentClause": "<verbatim current clause text, or 'None found.' if absent>", "replacementClause": "<complete, formal legal drafting style replacement clause, ready to insert into the contract>"}]
+  },
+  "fedramp": {
+    "score": <number 0-100>,
+    "applicable": <true/false based on whether contract involves cloud services to federal agencies or federal data>,
+    "checklist": [{"requirement": "<requirement>", "present": <true/false>, "note": "<brief note>"}],
+    "gaps": [{"issue": "<missing or deficient element>", "currentClause": "<verbatim current clause text, or 'None found.' if absent>", "replacementClause": "<complete, formal legal drafting style replacement clause, ready to insert into the contract>"}]
   },
   "summary": "<2-3 sentence overall assessment covering applicable frameworks>"
 }
 
-Note: Set "applicable" to false for frameworks that don't apply to this contract type (e.g., HIPAA for non-healthcare contracts, SOX for non-public-company vendors, CMMC/NIST 800-171 for non-federal/non-defense contracts). Still analyze if unclear, but note low applicability.
+Note: Set "applicable" to false for frameworks that don't apply to this contract type (e.g., HIPAA for non-healthcare contracts, SOX for non-public-company vendors, CMMC/NIST 800-171 for non-federal/non-defense contracts, PCI DSS for non-payment contracts, FedRAMP for non-federal cloud contracts). Still analyze if unclear, but note low applicability.
 
 CONTRACT TEXT:
 `;
 
 export default async function handler(req, res) {
-  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -294,12 +282,10 @@ export default async function handler(req, res) {
 
     const responseText = message.content[0].text;
     
-    // Parse JSON from response
     let result;
     try {
       result = JSON.parse(responseText);
     } catch (parseError) {
-      // Try to extract JSON from response if wrapped in other text
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         result = JSON.parse(jsonMatch[0]);
