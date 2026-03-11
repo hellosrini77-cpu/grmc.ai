@@ -239,7 +239,7 @@ export default function Post2() {
       {/* Footer */}
       <footer className="mt-16 py-8 border-t border-slate-800 text-center text-slate-500 text-sm">
         <p>GRMC.ai™ — Governance, Risk Management & Compliance</p>
-        <p className="mt-2 text-xs text-slate-600">© 2025 GRMC.ai. All rights reserved.</p>
+        <p className="mt-2 text-xs text-slate-600">© 2026 GRMC.ai. All rights reserved.</p>
       </footer>
     </div>
     </>
