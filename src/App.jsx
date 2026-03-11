@@ -996,7 +996,7 @@ function Home() {
           <p>GRMC.ai™ — Governance, Risk Management & Compliance</p>
           <p className="mt-1">AI-powered contract compliance analysis</p>
           <p className="mt-3 text-xs text-slate-600">🔒 Zero data retention • Your contracts are never stored</p>
-          <p className="mt-2 text-xs text-slate-600">© 2025 GRMC.ai. All rights reserved.</p>
+          <p className="mt-2 text-xs text-slate-600">© 2026 GRMC.ai. All rights reserved.</p>
         </footer>
       </main>
     </div>
