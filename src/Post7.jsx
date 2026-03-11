@@ -431,7 +431,7 @@ export default function Post7() {
             <p style={styles.p}>Consultants and auditors are the visible line items. The real budget-killer is hidden: the internal labor cost of your own team being diverted from core work for months.</p>
             <blockquote style={styles.blockquote}>
               <p style={styles.bqText}>The dedication of a senior project lead at 50% FTE for the typical six-month compliance duration incurs an estimated cost of $50,000–$75,000 in equivalent salary or consulting fees. This represents the substantial financial weight of lost productivity.</p>
-              <span style={styles.bqSource}>— DefendMyBusiness.com, SOC 2 Compliance Cost: Full Breakdown (2025)</span>
+              <span style={styles.bqSource}>— DefendMyBusiness.com, SOC 2 Compliance Cost: Full Breakdown ()</span>
             </blockquote>
             <p style={styles.p}>That is before a single auditor invoice arrives. Add remediation costs — identified nearly every time in a first-pass gap analysis:</p>
             <blockquote style={styles.blockquote}>
