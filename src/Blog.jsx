@@ -9,7 +9,15 @@ const posts = [
   date: 'March 6, 2026',
   category: 'Research',
   readTime: '12 min read'
-},
+ },
+ {
+  slug: 'grmc-ai-benchmark-study-contract-compliance',
+  title: 'How GRMC.ai Performs: A Benchmarking Study on AI Contract Compliance Analysis',
+  excerpt: 'We tested GRMC.ai on 50 synthetic contracts across GDPR, SOC 2, CCPA, and HIPAA. Here\'s what we found — 93.9% gap detection accuracy, 4.7% false positive rate, and under 30 seconds per contract.',
+  date: 'March 11, 2026',
+  category: 'Research',
+  readTime: '6 min read'
+ },
   {
     slug: 'ai-contract-analysis-beyond-hype',
     title: 'AI-Powered Contract Analysis: Beyond the Hype and Into Real Legal Operations Value',
