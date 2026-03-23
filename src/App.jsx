@@ -24,6 +24,7 @@ const FRAMEWORKS = [
   { key: 'nist171', label: 'NIST 800-171', fullName: 'NIST SP 800-171' },
   { key: 'pcidss', label: 'PCI DSS', fullName: 'PCI DSS (Payment Card Industry)' },
   { key: 'fedramp', label: 'FedRAMP', fullName: 'FedRAMP Authorization' },
+  { key: 'nistaimrf', label: 'NIST AI RMF', fullName: 'NIST AI Risk Management Framework' },
 ];
 
 // Generate a simple hash for contract text to use as an identifier
@@ -74,6 +75,7 @@ const saveToHistory = (identifier, fileName, results) => {
       nist171: results.nist171?.score,
       pcidss: results.pcidss?.score,
       fedramp: results.fedramp?.score,
+      nistaimrf: results.nistaimrf?.score,
     }
   });
   
@@ -327,7 +329,7 @@ function Home() {
         doc.text(`${deltaText} vs previous`, margin + 55, y + 25);
       }
       
-      let scoreX = pageWidth - margin - 200;
+      let scoreX = pageWidth - margin - 220;
       FRAMEWORKS.forEach(fw => {
         const fwData = results[fw.key];
         const fwScore = fwData?.applicable === false ? 'N/A' : `${fwData?.score || 0}%`;
@@ -343,7 +345,7 @@ function Home() {
         doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
         doc.text(fwScore, scoreX, y + 15);
-        scoreX += 25;
+        scoreX += 20;
       });
       
       y += 45;
@@ -513,14 +515,14 @@ function Home() {
         doc.setFontSize(12);
         doc.text(`${deltaText} vs previous`, margin + 55, y + 25);
       }
-      let scoreX = pageWidth - margin - 200;
+      let scoreX = pageWidth - margin - 220;
       FRAMEWORKS.forEach(fw => {
         const fwData = results[fw.key];
         const fwScore = fwData?.applicable === false ? 'N/A' : `${fwData?.score || 0}%`;
         const fwColor = fwData?.applicable === false ? [100, 116, 139] : fwData?.score >= 80 ? [74, 222, 128] : fwData?.score >= 60 ? [250, 204, 21] : fwData?.score >= 40 ? [251, 146, 60] : [248, 113, 113];
         doc.setTextColor(148, 163, 184); doc.setFontSize(7); doc.setFont('helvetica', 'normal'); doc.text(fw.label, scoreX, y + 5);
         doc.setTextColor(...fwColor); doc.setFontSize(12); doc.setFont('helvetica', 'bold'); doc.text(fwScore, scoreX, y + 15);
-        scoreX += 25;
+        scoreX += 20;
       });
       y += 45;
       if (results.summary) { checkPageBreak(30); doc.setTextColor(100, 116, 139); doc.setFontSize(9); doc.setFont('helvetica', 'italic'); const summaryLines = doc.splitTextToSize(results.summary, pageWidth - 2 * margin); doc.text(summaryLines, margin, y); y += summaryLines.length * 5 + 10; }
@@ -799,7 +801,7 @@ function Home() {
             Stop Manually Reviewing Vendor Contracts for <span className="text-blue-400">Compliance</span>
           </h1>
           <p className="text-slate-300 text-xl max-w-3xl mx-auto mb-4">
-            AI-powered gap analysis for GDPR, SOC 2, CCPA, HIPAA, ISO 27001, SOX, CMMC, NIST 800-171, PCI DSS, and FedRAMP. Upload a contract, get instant compliance assessment in minutes.
+            AI-powered gap analysis for GDPR, SOC 2, CCPA, HIPAA, ISO 27001, SOX, CMMC, NIST 800-171, PCI DSS, FedRAMP, and NIST AI RMF. Upload a contract, get instant compliance assessment in minutes.
           </p>
           <p className="text-slate-500 text-sm max-w-2xl mx-auto">
             Your CLM tells you what's in the contract. <span className="text-blue-400 font-semibold">GRMC.ai tells you if it's compliant</span>.
@@ -810,7 +812,7 @@ function Home() {
           <h2 className="text-2xl font-bold mb-4 text-center">The Compliance Gap in Modern Contract Management</h2>
           <p className="text-slate-300 mb-4 text-center max-w-3xl mx-auto">Legal and compliance teams face a critical challenge:</p>
           <div className="grid md:grid-cols-2 gap-4 max-w-4xl mx-auto">
-            <div className="bg-slate-900/50 rounded-lg p-4"><div className="text-red-400 mb-2">⚠️</div><p className="text-slate-300 text-sm">Vendor contracts require compliance verification (GDPR, SOC 2, HIPAA, ISO 27001, SOX, CMMC, NIST 800-171, PCI DSS, FedRAMP)</p></div>
+            <div className="bg-slate-900/50 rounded-lg p-4"><div className="text-red-400 mb-2">⚠️</div><p className="text-slate-300 text-sm">Vendor contracts require compliance verification (GDPR, SOC 2, HIPAA, ISO 27001, SOX, CMMC, NIST 800-171, PCI DSS, FedRAMP, NIST AI RMF)</p></div>
             <div className="bg-slate-900/50 rounded-lg p-4"><div className="text-red-400 mb-2">⚠️</div><p className="text-slate-300 text-sm">CLM systems extract data but don't judge compliance</p></div>
             <div className="bg-slate-900/50 rounded-lg p-4"><div className="text-red-400 mb-2">⚠️</div><p className="text-slate-300 text-sm">Manual review takes 2-4 hours per contract</p></div>
             <div className="bg-slate-900/50 rounded-lg p-4"><div className="text-red-400 mb-2">⚠️</div><p className="text-slate-300 text-sm">Compliance mistakes are costly (fines, audit failures, deal delays)</p></div>
@@ -862,6 +864,7 @@ function Home() {
                 <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-indigo-500"></span><span className="text-slate-400">NIST 800-171</span></div>
                 <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-500"></span><span className="text-slate-400">PCI DSS</span></div>
                 <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-cyan-500"></span><span className="text-slate-400">FedRAMP</span></div>
+                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-violet-500"></span><span className="text-slate-400">NIST AI RMF</span></div>
               </div>
             </div>
 
@@ -917,7 +920,7 @@ function Home() {
             </div>
             <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
               <h3 className="text-xl font-semibold mb-3 text-purple-400">Compliance Officers</h3>
-              <p className="text-slate-300 text-sm mb-4">Compliance and risk teams preparing for audits need to verify all vendor contracts meet framework requirements. GRMC.ai provides automated verification and audit-ready documentation across all ten frameworks.</p>
+              <p className="text-slate-300 text-sm mb-4">Compliance and risk teams preparing for audits need to verify all vendor contracts meet framework requirements. GRMC.ai provides automated verification and audit-ready documentation across all eleven frameworks.</p>
               <ul className="text-slate-400 text-sm space-y-2"><li>• Preparing for compliance audits</li><li>• Managing third-party risk programs</li><li>• Need audit documentation and evidence</li><li>• Tracking compliance across vendors</li></ul>
             </div>
             <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
@@ -930,7 +933,7 @@ function Home() {
 
         <section className="mb-16">
           <h2 className="text-3xl font-bold text-center mb-4">Supported Compliance Frameworks</h2>
-          <p className="text-slate-400 text-center mb-8 max-w-2xl mx-auto">GRMC.ai provides automated gap analysis against ten major compliance frameworks</p>
+          <p className="text-slate-400 text-center mb-8 max-w-2xl mx-auto">GRMC.ai provides automated gap analysis against eleven major compliance frameworks</p>
           <div className="space-y-6">
             <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
               <h3 className="text-xl font-semibold mb-3 text-blue-400">GDPR Article 28 (Data Processing Agreements)</h3>
@@ -981,6 +984,18 @@ function Home() {
               <h3 className="text-xl font-semibold mb-3 text-cyan-400">FedRAMP (Federal Risk and Authorization Management Program)</h3>
               <p className="text-slate-300 text-sm mb-4">Analyzes contracts for federal cloud service authorization requirements:</p>
               <div className="grid md:grid-cols-2 gap-3 text-slate-400 text-sm"><div>• FedRAMP ATO or P-ATO authorization level</div><div>• NIST SP 800-53 control implementation</div><div>• Continuous monitoring (ConMon) obligations</div><div>• Federal data residency requirements (US soil)</div><div>• FIPS 140-2/3 validated encryption required</div><div>• 3PAO right-to-audit provisions</div></div>
+            </div>
+            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+              <h3 className="text-xl font-semibold mb-3 text-violet-400">NIST AI Risk Management Framework (AI RMF)</h3>
+              <p className="text-slate-300 text-sm mb-4">Analyzes contracts for AI governance and risk management obligations under the NIST AI RMF:</p>
+              <div className="grid md:grid-cols-2 gap-3 text-slate-400 text-sm">
+                <div>• AI system transparency and explainability obligations</div>
+                <div>• Bias and fairness testing requirements</div>
+                <div>• Human oversight and accountability provisions</div>
+                <div>• AI incident reporting and monitoring obligations</div>
+                <div>• Data governance for AI training and inference</div>
+                <div>• AI risk assessment and documentation requirements</div>
+              </div>
             </div>
           </div>
         </section>
