@@ -4,9 +4,9 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-const COMBINED_PROMPT = `You are a legal compliance expert specializing in data privacy, security, and financial regulations.
+const COMBINED_PROMPT = `You are a legal compliance expert specializing in data privacy, security, financial, and AI governance regulations.
 
-Analyze the following contract text and evaluate its compliance with ALL TEN frameworks:
+Analyze the following contract text and evaluate its compliance with ALL ELEVEN frameworks:
 1. GDPR Article 28 (Data Processing Agreement requirements)
 2. SOC 2 (Vendor security requirements)
 3. CCPA/CPRA (California Consumer Privacy Act)
@@ -17,6 +17,7 @@ Analyze the following contract text and evaluate its compliance with ALL TEN fra
 8. NIST 800-171 (Protecting Controlled Unclassified Information - if applicable)
 9. PCI DSS (Payment Card Industry Data Security Standard - if applicable)
 10. FedRAMP (Federal Risk and Authorization Management Program - if applicable)
+11. NIST AI RMF (NIST AI Risk Management Framework - if applicable to contracts involving AI systems)
 
 **GDPR Article 28 Requirements:**
 - Processing scope and purpose clearly defined
@@ -146,12 +147,8 @@ Analyze the following contract text and evaluate its compliance with ALL TEN fra
 - Annual PCI DSS assessment or self-assessment questionnaire (SAQ) requirement
 - Penetration testing obligations
 - Incident response plan for cardholder data breaches
-- Immediate notification of suspected or confirmed cardholder data breach
-- Flow-down of PCI DSS to subcontractors handling cardholder data
-- Right to audit PCI DSS compliance
-- Qualified Security Assessor (QSA) or internal security assessor requirement
-- Tokenization or point-to-point encryption (P2PE) requirements where applicable
-- Physical security of systems storing cardholder data
+- Immediate breach notification for cardholder data compromise
+- Subcontractor PCI DSS flow-down requirements
 - Data retention and secure deletion of cardholder data
 
 **FedRAMP (Federal Risk and Authorization Management Program) Contract Requirements:**
@@ -173,6 +170,16 @@ Analyze the following contract text and evaluate its compliance with ALL TEN fra
 - Configuration management and change control (CM plan)
 - Contingency planning and disaster recovery (FIPS-compliant backups)
 - Flow-down of FedRAMP requirements to subcontractors and CSPs
+
+**NIST AI RMF (AI Risk Management Framework) Contract Requirements:**
+- Explicit reference to NIST AI RMF or AI governance obligations
+- AI transparency and explainability: vendor must document and disclose how AI systems make decisions affecting the customer
+- Bias and fairness testing: obligations to test AI outputs for bias, discrimination, or disparate impact, and remediate findings
+- Human oversight and accountability: requirement for human review, override capability, or kill-switch mechanisms for material AI decisions
+- AI incident reporting: obligation to notify customer of AI system failures, unexpected behaviors, or harmful outputs (typically within 24-72 hours)
+- Data governance for AI: addressing data quality, provenance, consent, and permitted use for AI training and inference
+- AI risk documentation: vendor must maintain and provide upon request AI risk assessments, model cards, or system documentation
+- Prohibition on unauthorized AI use: vendor may not use customer data to train AI models without explicit written consent
 
 For each gap identified, you must:
 1. Extract the CURRENT clause text verbatim from the contract. If no clause exists on that topic, set currentClause to "None found."
@@ -241,10 +248,16 @@ Respond with a JSON object (no markdown, just pure JSON):
     "checklist": [{"requirement": "<requirement>", "present": <true/false>, "note": "<brief note>"}],
     "gaps": [{"issue": "<missing or deficient element>", "currentClause": "<verbatim current clause text, or 'None found.' if absent>", "replacementClause": "<complete, formal legal drafting style replacement clause, ready to insert into the contract>"}]
   },
+  "nistaimrf": {
+    "score": <number 0-100>,
+    "applicable": <true/false based on whether contract involves AI systems, automated decision-making, or machine learning>,
+    "checklist": [{"requirement": "<requirement>", "present": <true/false>, "note": "<brief note>"}],
+    "gaps": [{"issue": "<missing or deficient element>", "currentClause": "<verbatim current clause text, or 'None found.' if absent>", "replacementClause": "<complete, formal legal drafting style replacement clause, ready to insert into the contract>"}]
+  },
   "summary": "<2-3 sentence overall assessment covering applicable frameworks>"
 }
 
-Note: Set "applicable" to false for frameworks that don't apply to this contract type (e.g., HIPAA for non-healthcare contracts, SOX for non-public-company vendors, CMMC/NIST 800-171 for non-federal/non-defense contracts, PCI DSS for non-payment contracts, FedRAMP for non-federal cloud contracts). Still analyze if unclear, but note low applicability.
+Note: Set "applicable" to false for frameworks that don't apply to this contract type (e.g., HIPAA for non-healthcare contracts, SOX for non-public-company vendors, CMMC/NIST 800-171 for non-federal/non-defense contracts, PCI DSS for non-payment contracts, FedRAMP for non-federal cloud contracts, NIST AI RMF for contracts with no AI or automated decision-making components). Still analyze if unclear, but note low applicability.
 
 CONTRACT TEXT:
 `;
