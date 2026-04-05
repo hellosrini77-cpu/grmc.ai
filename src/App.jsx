@@ -5,7 +5,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Pricing from './pages/Pricing';
 import Success from './pages/Success';
-import MainApp from './MainApp';
+import MainApp, { AnalyzeTool } from './MainApp';
 import Blog from './Blog';
 import Post1 from './Post1';
 import Post2 from './Post2';
@@ -38,13 +38,16 @@ export default function App() {
 
           {/* Protected main app */}
           <Route
-            path="/"
+            path="/app"
             element={
               <ProtectedRoute>
-                <MainApp />
+                <AnalyzeTool />
               </ProtectedRoute>
             }
           />
+
+          {/* Public landing page */}
+          <Route path="/" element={<MainApp />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
