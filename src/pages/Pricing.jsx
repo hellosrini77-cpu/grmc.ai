@@ -50,7 +50,7 @@ export default function Pricing() {
           <div className="text-center mb-8">
             <span className="bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wide">Annual Plan</span>
             <div className="mt-4">
-              <span className="text-5xl font-bold text-white">$99</span>
+              <span className="text-5xl font-bold text-white">$1999</span>
               <span className="text-gray-400 ml-2">/year</span>
             </div>
             <p className="text-gray-400 text-sm mt-2">Less than $8.25/month. Cancel anytime.</p>
