@@ -50,10 +50,10 @@ export default function Pricing() {
           <div className="text-center mb-8">
             <span className="bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wide">Annual Plan</span>
             <div className="mt-4">
-              <span className="text-5xl font-bold text-white">$1999</span>
+              <span className="text-5xl font-bold text-white">$1,999</span>
               <span className="text-gray-400 ml-2">/year</span>
             </div>
-            <p className="text-gray-400 text-sm mt-2">Less than $8.25/month. Cancel anytime.</p>
+            <p className="text-gray-400 text-sm mt-2">Less than $167/month. Cancel anytime.</p>
           </div>
 
           <ul className="space-y-3 mb-8">
@@ -83,7 +83,7 @@ export default function Pricing() {
           )}
 
           <p className="text-center text-gray-500 text-xs mt-4">
-            Secure payment via Stripe. 30-day money-back guarantee.
+            Secure payment via Stripe. 30-day money-back guarantee. Email contact@legalops360.ai within 30 days of purchase to request a full refund.
           </p>
         </div>
       </div>

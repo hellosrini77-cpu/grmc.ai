@@ -12,7 +12,7 @@ export default function Success() {
         // Wait a moment for webhook to process
         await new Promise(r => setTimeout(r, 3000));
         await checkSubscription(currentUser.uid);
-        navigate('/');
+        navigate('/app');
       }
     }
     refresh();
